@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Mail, UserPlus } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { updateWorkspace } from "../features/workspaceSlice";
+import toast from "react-hot-toast";
+import { assets } from "../assets/assets";
 
 const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
-
+    const dispatch = useDispatch();
     const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
@@ -13,7 +16,40 @@ const InviteMemberDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 500));
 
+            const newMember = {
+                id: crypto.randomUUID(),
+                userId: crypto.randomUUID(),
+                workspaceId: currentWorkspace.id,
+                message: "",
+                role: formData.role === "org:admin" ? "ADMIN" : "MEMBER",
+                user: {
+                    id: crypto.randomUUID(),
+                    name: formData.email.split('@')[0],
+                    email: formData.email,
+                    image: assets.profile_img_a,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }
+            };
+
+            const updatedWorkspace = {
+                ...currentWorkspace,
+                members: [...currentWorkspace.members, newMember]
+            };
+
+            dispatch(updateWorkspace(updatedWorkspace));
+            toast.success("Invitation sent (Member added)");
+            setIsDialogOpen(false);
+            setFormData({ email: "", role: "org:member" });
+        } catch (error) {
+            toast.error("Failed to send invitation");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (!isDialogOpen) return null;

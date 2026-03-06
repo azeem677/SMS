@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Mail, UserPlus } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useSearchParams } from "react-router-dom";
+import { updateProject } from "../features/workspaceSlice";
+import toast from "react-hot-toast";
 
 const AddProjectMember = ({ isDialogOpen, setIsDialogOpen }) => {
 
+    const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
 
     const id = searchParams.get('id');
@@ -12,14 +15,37 @@ const AddProjectMember = ({ isDialogOpen, setIsDialogOpen }) => {
     const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
 
     const project = currentWorkspace?.projects.find((p) => p.id === id);
-    const projectMembersEmails = project?.members.map((member) => member.user.email);
+    const projectMembersEmails = project?.members.map((member) => member.user.email) || [];
 
     const [email, setEmail] = useState('');
     const [isAdding, setIsAdding] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        setIsAdding(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const memberToAdd = currentWorkspace.members.find(m => m.user.email === email);
+            if (!memberToAdd) {
+                toast.error("Member not found in workspace");
+                return;
+            }
+
+            const updatedProject = {
+                ...project,
+                members: [...project.members, { ...memberToAdd, id: crypto.randomUUID(), projectId: project.id }]
+            };
+
+            dispatch(updateProject(updatedProject));
+            toast.success("Member added to project");
+            setIsDialogOpen(false);
+            setEmail('');
+        } catch (error) {
+            toast.error("Failed to add member");
+        } finally {
+            setIsAdding(false);
+        }
     };
 
     if (!isDialogOpen) return null;

@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { format } from "date-fns";
+import { addTask } from "../features/workspaceSlice";
+import toast from "react-hot-toast";
 
 export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, projectId }) {
+    const dispatch = useDispatch();
     const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
     const project = currentWorkspace?.projects.find((p) => p.id === projectId);
     const teamMembers = project?.members || [];
@@ -21,13 +24,45 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
 
+            const assignee = teamMembers.find(m => m.user.id === formData.assigneeId)?.user || null;
 
+            const newTask = {
+                ...formData,
+                id: crypto.randomUUID(),
+                projectId,
+                assignee,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                comments: []
+            };
+
+            dispatch(addTask(newTask));
+            toast.success("Task created successfully");
+            setShowCreateTask(false);
+            setFormData({
+                title: "",
+                description: "",
+                type: "TASK",
+                status: "TODO",
+                priority: "MEDIUM",
+                assigneeId: "",
+                due_date: "",
+            });
+        } catch (error) {
+            toast.error("Failed to create task");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return showCreateTask ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur">
-            <div className="bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg shadow-lg w-full max-w-md p-6 text-zinc-900 dark:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur p-4">
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg shadow-lg w-full max-w-md p-6 text-zinc-900 dark:text-white max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-bold mb-4">Create New Task</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

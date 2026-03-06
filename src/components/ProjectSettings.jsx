@@ -1,18 +1,21 @@
 import { format } from "date-fns";
 import { Plus, Save } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { updateProject } from "../features/workspaceSlice";
+import toast from "react-hot-toast";
 import AddProjectMember from "./AddProjectMember";
 
 export default function ProjectSettings({ project }) {
-
+    const dispatch = useDispatch();
     const [formData, setFormData] = useState({
-        name: "New Website Launch",
-        description: "Initial launch for new web platform.",
+        name: "",
+        description: "",
         status: "PLANNING",
         priority: "MEDIUM",
-        start_date: "2025-09-10",
-        end_date: "2025-10-15",
-        progress: 30,
+        start_date: new Date(),
+        end_date: new Date(),
+        progress: 0,
     });
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -20,7 +23,16 @@ export default function ProjectSettings({ project }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setIsSubmitting(true);
+        try {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            dispatch(updateProject({ ...project, ...formData }));
+            toast.success("Project settings updated");
+        } catch (error) {
+            toast.error("Failed to update project settings");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     useEffect(() => {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeftIcon, PlusIcon, SettingsIcon, BarChart3Icon, CalendarIcon, FileStackIcon, ZapIcon } from "lucide-react";
 import ProjectAnalytics from "../components/ProjectAnalytics";
 import ProjectSettings from "../components/ProjectSettings";
@@ -12,7 +12,7 @@ export default function ProjectDetail() {
 
     const [searchParams, setSearchParams] = useSearchParams();
     const tab = searchParams.get('tab');
-    const id = searchParams.get('id');
+    const { id } = useParams();
 
     const navigate = useNavigate();
     const projects = useSelector((state) => state?.workspace?.currentWorkspace?.projects || []);

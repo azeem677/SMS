@@ -5,7 +5,7 @@ import ProjectCard from "../components/ProjectCard";
 import CreateProjectDialog from "../components/CreateProjectDialog";
 
 export default function Projects() {
-    
+
     const projects = useSelector(
         (state) => state?.workspace?.currentWorkspace?.projects || []
     );
