@@ -68,7 +68,7 @@ export const fetchProjects = createAsyncThunk(
         try {
             const token = getState().auth.token;
             console.log("Fetching projects...");
-            const response = await fetch("https://sms-backend-chi.vercel.app/api/projects", {
+            const response = await fetch("http://localhost:5000/api/projects", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -96,7 +96,7 @@ export const createProject = createAsyncThunk(
         try {
             console.log("Creating project with payload:", projectData);
             const token = getState().auth.token;
-            const response = await fetch("https://sms-backend-chi.vercel.app/api/projects", {
+            const response = await fetch("http://localhost:5000/api/projects", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
