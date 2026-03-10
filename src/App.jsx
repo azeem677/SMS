@@ -8,6 +8,7 @@ import ProjectDetails from "./pages/ProjectDetails";
 import TaskDetails from "./pages/TaskDetails";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Chat from "./pages/Chat";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { fetchProjects, fetchWorkspaces } from "./features/workspaceSlice";
@@ -45,6 +46,7 @@ const App = () => {
                     <Route path="projects" element={<Projects />} />
                     <Route path="projects/:id" element={<ProjectDetails />} />
                     <Route path="taskDetails" element={<TaskDetails />} />
+                    <Route path="chat" element={<Chat />} />
                 </Route>
             </Routes>
         </>

@@ -96,7 +96,7 @@ export const createProject = createAsyncThunk(
         try {
             console.log("Creating project with payload:", projectData);
             const token = getState().auth.token;
-            const response = await fetch("http://localhost:5000/api/projects", {
+            const response = await fetch("http://localhost:5000z-10 bg-white dark:bg-zinc-900 min-w-68 flex flex-col h-screen border-r border-gray-200 dark:border-zinc-800 max-sm:absolute transition-all -left-full z-10 bg-white dark:bg-zinc-900 min-w-68 flex flex-col h-screen border-r border-gray-200 dark:border-zinc-800 max-sm:absolute transition-all -left-full /api/projects", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

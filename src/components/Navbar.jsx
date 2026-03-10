@@ -68,7 +68,13 @@ const Navbar = ({ setIsSidebarOpen }) => {
                                         Logout
                                     </button>
                                 </div>
-                                <img src={assets.profile_img_a} alt="User Avatar" className="size-8 rounded-full border border-gray-200 dark:border-zinc-700 object-cover" />
+                                {user?.image ? (
+                                    <img src={user.image} alt="User Avatar" className="size-10 rounded-full border border-gray-200 dark:border-zinc-700 object-cover" />
+                                ) : (
+                                    <div className="size-10 rounded-full bg-[#002f6c] dark:bg-blue-900/40 text-white font-bold flex items-center justify-center uppercase shadow-sm text-lg">
+                                        {(user?.name || 'U').charAt(0)}
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <Link to="/login" className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">
