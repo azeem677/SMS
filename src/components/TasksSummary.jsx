@@ -1,23 +1,31 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, Clock, AlertTriangle, User } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { selectCurrentUser } from "../features/authSlice";
 
 export default function TasksSummary() {
-
+    const navigate = useNavigate();
     const { currentWorkspace } = useSelector((state) => state.workspace);
-    const user = { id: 'user_1' }
+    const user = useSelector(selectCurrentUser);
     const [tasks, setTasks] = useState([]);
 
     // Get all tasks for all projects in current workspace
     useEffect(() => {
         if (currentWorkspace) {
-            setTasks(currentWorkspace.projects.flatMap((project) => project.tasks));
+            setTasks(currentWorkspace.projects?.flatMap((project) => project.tasks || []) || []);
         }
     }, [currentWorkspace]);
 
-    const myTasks = tasks.filter(i => i.assigneeId === user.id);
-    const overdueTasks = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'DONE');
-    const inProgressIssues = tasks.filter(i => i.status === 'IN_PROGRESS');
+    const myTasks = tasks.filter(t => {
+        const assigneeId = t.assignee?.id || t.assignee?._id || t.assignee;
+        return assigneeId === (user?.id || user?._id);
+    });
+    const overdueTasks = tasks.filter(t => {
+        const dDate = t.dueDate || t.due_date;
+        return dDate && new Date(dDate) < new Date() && t.status.toUpperCase() !== 'DONE';
+    });
+    const inProgressIssues = tasks.filter(i => i.status.toUpperCase() === 'IN_PROGRESS' || i.status.toUpperCase() === 'IN PROGRESS');
 
     const summaryCards = [
         {
@@ -68,7 +76,7 @@ export default function TasksSummary() {
                         ) : (
                             <div className="space-y-3">
                                 {card.items.map((issue) => (
-                                    <div key={issue.id} className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                                    <div key={issue.id} className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer" onClick={() => navigate(`/taskDetails?projectId=${issue.projectId || issue.project?.id || issue.project}&taskId=${issue.id}`)}>
                                         <h4 className="text-sm font-medium text-gray-800 dark:text-white truncate">
                                             {issue.title}
                                         </h4>
@@ -77,11 +85,9 @@ export default function TasksSummary() {
                                         </p>
                                     </div>
                                 ))}
-                                {card.count > 3 && (
-                                    <button className="flex items-center justify-center w-full text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-white mt-2">
-                                        View {card.count - 3} more <ArrowRight className="w-3 h-3 ml-2" />
-                                    </button>
-                                )}
+                                <button onClick={() => navigate('/my-tasks')} className="flex items-center justify-center w-full text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-white mt-4 border-t border-zinc-100 dark:border-zinc-900 pt-3">
+                                    View all tasks <ArrowRight className="w-3 h-3 ml-2" />
+                                </button>
                             </div>
                         )}
                     </div>

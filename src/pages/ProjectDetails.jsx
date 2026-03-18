@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeftIcon, PlusIcon, SettingsIcon, BarChart3Icon, CalendarIcon, FileStackIcon, ZapIcon } from "lucide-react";
+import { fetchTasks } from "../features/workspaceSlice";
 import ProjectAnalytics from "../components/ProjectAnalytics";
 import ProjectSettings from "../components/ProjectSettings";
 import CreateTaskDialog from "../components/CreateTaskDialog";
@@ -13,9 +14,11 @@ export default function ProjectDetail() {
     const [searchParams, setSearchParams] = useSearchParams();
     const tab = searchParams.get('tab');
     const { id } = useParams();
-
     const navigate = useNavigate();
-    const projects = useSelector((state) => state?.workspace?.currentWorkspace?.projects || []);
+    const dispatch = useDispatch();
+
+    const { currentWorkspace } = useSelector((state) => state.workspace);
+    const projects = currentWorkspace?.projects || [];
 
     const [project, setProject] = useState(null);
     const [tasks, setTasks] = useState([]);
@@ -27,6 +30,12 @@ export default function ProjectDetail() {
     }, [tab]);
 
     useEffect(() => {
+        if (id) {
+            dispatch(fetchTasks(id));
+        }
+    }, [id, dispatch]);
+
+    useEffect(() => {
         if (projects && projects.length > 0) {
             const proj = projects.find((p) => p.id === id);
             setProject(proj);
@@ -35,11 +44,11 @@ export default function ProjectDetail() {
     }, [id, projects]);
 
     const statusColors = {
-        PLANNING: "bg-zinc-200 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-200",
-        ACTIVE: "bg-emerald-200 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-900",
-        ON_HOLD: "bg-amber-200 text-amber-900 dark:bg-amber-500 dark:text-amber-900",
-        COMPLETED: "bg-blue-200 text-blue-900 dark:bg-blue-500 dark:text-blue-900",
-        CANCELLED: "bg-red-200 text-red-900 dark:bg-red-500 dark:text-red-900",
+        'Planning': "bg-zinc-200 text-zinc-900 dark:bg-zinc-600 dark:text-zinc-200",
+        'Active': "bg-emerald-200 text-emerald-900 dark:bg-emerald-500 dark:text-emerald-900",
+        'On Hold': "bg-amber-200 text-amber-900 dark:bg-amber-500 dark:text-amber-900",
+        'Completed': "bg-blue-200 text-blue-900 dark:bg-blue-500 dark:text-blue-900",
+        'Cancelled': "bg-red-200 text-red-900 dark:bg-red-500 dark:text-red-900",
     };
 
     if (!project) {
@@ -63,8 +72,8 @@ export default function ProjectDetail() {
                     </button>
                     <div className="flex items-center gap-3">
                         <h1 className="text-xl font-medium">{project.name}</h1>
-                        <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[project.status]}`} >
-                            {project.status.replace("_", " ")}
+                        <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[project.status] || "bg-zinc-200"}`} >
+                            {project.status ? project.status.replace("_", " ") : "Unknown"}
                         </span>
                     </div>
                 </div>
@@ -78,8 +87,8 @@ export default function ProjectDetail() {
             <div className="grid grid-cols-2 sm:flex flex-wrap gap-6">
                 {[
                     { label: "Total Tasks", value: tasks.length, color: "text-zinc-900 dark:text-white" },
-                    { label: "Completed", value: tasks.filter((t) => t.status === "DONE").length, color: "text-emerald-700 dark:text-emerald-400" },
-                    { label: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS" || t.status === "TODO").length, color: "text-amber-700 dark:text-amber-400" },
+                    { label: "Completed", value: tasks.filter((t) => t.status === "Done").length, color: "text-emerald-700 dark:text-emerald-400" },
+                    { label: "In Progress", value: tasks.filter((t) => t.status === "In Progress" || t.status === "To Do").length, color: "text-amber-700 dark:text-amber-400" },
                     { label: "Team Members", value: project.members?.length || 0, color: "text-blue-700 dark:text-blue-400" },
                 ].map((card, idx) => (
                     <div key={idx} className=" dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200 dark:border-zinc-800 flex justify-between sm:min-w-60 p-4 py-2.5 rounded">

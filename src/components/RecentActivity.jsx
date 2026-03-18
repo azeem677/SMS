@@ -50,8 +50,9 @@ const RecentActivity = () => {
                 ) : (
                     <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
                         {tasks.map((task) => {
-                            const TypeIcon = typeIcons[task.type]?.icon || Square;
-                            const iconColor = typeIcons[task.type]?.color || "text-gray-500 dark:text-gray-400";
+                            const taskType = task.type?.toUpperCase() || 'TASK';
+                            const taskStatus = task.status?.toUpperCase().replace(' ', '_') || 'TODO';
+                            const { icon: TypeIcon, color: iconColor } = typeIcons[taskType] || typeIcons.TASK;
 
                             return (
                                 <div key={task.id} className="p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
@@ -64,22 +65,24 @@ const RecentActivity = () => {
                                                 <h4 className="text-zinc-800 dark:text-zinc-200 truncate">
                                                     {task.title}
                                                 </h4>
-                                                <span className={`ml-2 px-2 py-1 rounded text-xs ${statusColors[task.status] || "bg-zinc-300 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"}`}>
-                                                    {task.status.replace("_", " ")}
+                                                <span className={`ml-2 px-2 py-1 rounded text-xs ${statusColors[taskStatus] || "bg-zinc-300 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300"}`}>
+                                                    {task.status?.replace("_", " ")}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                                                <span className="capitalize">{task.type.toLowerCase()}</span>
+                                                <span className="capitalize">{task.type?.toLowerCase()}</span>
                                                 {task.assignee && (
                                                     <div className="flex items-center gap-1">
                                                         <div className="w-4 h-4 bg-zinc-300 dark:bg-zinc-700 rounded-full flex items-center justify-center text-[10px] text-zinc-800 dark:text-zinc-200">
-                                                            {task.assignee.name[0].toUpperCase()}
+                                                            {task.assignee.name ? task.assignee.name[0].toUpperCase() : "?"}
                                                         </div>
                                                         {task.assignee.name}
                                                     </div>
                                                 )}
                                                 <span>
-                                                    {format(new Date(task.updatedAt), "MMM d, h:mm a")}
+                                                    {task.updatedAt && !isNaN(new Date(task.updatedAt).getTime())
+                                                        ? format(new Date(task.updatedAt), "MMM d, h:mm a")
+                                                        : "Recently"}
                                                 </span>
                                             </div>
                                         </div>

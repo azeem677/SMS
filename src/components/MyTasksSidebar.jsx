@@ -2,35 +2,33 @@ import { useEffect, useState } from 'react';
 import { CheckSquareIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { selectCurrentUser } from '../features/authSlice';
 
 function MyTasksSidebar() {
-
-    const user = { id: 'user_1' }
-
+    const user = useSelector(selectCurrentUser);
     const { currentWorkspace } = useSelector((state) => state.workspace);
     const [showMyTasks, setShowMyTasks] = useState(false);
     const [myTasks, setMyTasks] = useState([]);
 
     const toggleMyTasks = () => setShowMyTasks(prev => !prev);
 
-    const getTaskStatusColor = (status) => {
-        switch (status) {
-            case 'DONE':
-                return 'bg-green-500';
-            case 'IN_PROGRESS':
-                return 'bg-yellow-500';
-            case 'TODO':
-                return 'bg-gray-500 dark:bg-zinc-500';
-            default:
-                return 'bg-gray-400 dark:bg-zinc-400';
-        }
+    const getTaskStatusColor = (status = '') => {
+        const s = status.toUpperCase();
+        if (s === 'DONE') return 'bg-green-500';
+        if (s === 'IN_PROGRESS' || s === 'IN PROGRESS') return 'bg-yellow-500';
+        if (s === 'TODO' || s === 'TO DO') return 'bg-gray-500 dark:bg-zinc-500';
+        return 'bg-gray-400 dark:bg-zinc-400';
     };
 
     const fetchUserTasks = () => {
-        const userId = user?.id || '';
+        const userId = user?.id || user?._id || '';
         if (!userId || !currentWorkspace) return;
+
         const currentWorkspaceTasks = currentWorkspace.projects.flatMap((project) => {
-            return project.tasks.filter((task) => task?.assignee?.id === userId);
+            return (project.tasks || []).filter((task) => {
+                const assigneeId = task.assignee?.id || task.assignee?._id || task.assignee;
+                return assigneeId === userId;
+            });
         });
 
         setMyTasks(currentWorkspaceTasks);
@@ -38,23 +36,25 @@ function MyTasksSidebar() {
 
     useEffect(() => {
         fetchUserTasks()
-    }, [currentWorkspace])
+    }, [currentWorkspace, user])
 
     return (
         <div className="mt-6 px-3">
-            <div onClick={toggleMyTasks} className="flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800" >
-                <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800" >
+                <Link to="/my-tasks" className="flex items-center gap-2 cursor-pointer">
                     <CheckSquareIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
                     <h3 className="text-sm font-medium text-gray-700 dark:text-zinc-300">My Tasks</h3>
                     <span className="bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 text-xs px-2 py-0.5 rounded">
                         {myTasks.length}
                     </span>
+                </Link>
+                <div onClick={toggleMyTasks} className="cursor-pointer">
+                    {showMyTasks ? (
+                        <ChevronDownIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
+                    ) : (
+                        <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
+                    )}
                 </div>
-                {showMyTasks ? (
-                    <ChevronDownIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
-                ) : (
-                    <ChevronRightIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
-                )}
             </div>
 
             {showMyTasks && (

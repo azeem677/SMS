@@ -7,17 +7,17 @@ import { deleteTask, updateTask } from "../features/workspaceSlice";
 import { Bug, CalendarIcon, GitCommit, MessageSquare, Square, Trash, XIcon, Zap } from "lucide-react";
 
 const typeIcons = {
-    BUG: { icon: Bug, color: "text-red-600 dark:text-red-400" },
-    FEATURE: { icon: Zap, color: "text-blue-600 dark:text-blue-400" },
-    TASK: { icon: Square, color: "text-green-600 dark:text-green-400" },
-    IMPROVEMENT: { icon: GitCommit, color: "text-purple-600 dark:text-purple-400" },
-    OTHER: { icon: MessageSquare, color: "text-amber-600 dark:text-amber-400" },
+    'Bug': { icon: Bug, color: "text-red-600 dark:text-red-400" },
+    'Feature': { icon: Zap, color: "text-blue-600 dark:text-blue-400" },
+    'Task': { icon: Square, color: "text-green-600 dark:text-green-400" },
+    'Story': { icon: GitCommit, color: "text-purple-600 dark:text-purple-400" },
 };
 
 const priorityTexts = {
-    LOW: { background: "bg-red-100 dark:bg-red-950", prioritycolor: "text-red-600 dark:text-red-400" },
-    MEDIUM: { background: "bg-blue-100 dark:bg-blue-950", prioritycolor: "text-blue-600 dark:text-blue-400" },
-    HIGH: { background: "bg-emerald-100 dark:bg-emerald-950", prioritycolor: "text-emerald-600 dark:text-emerald-400" },
+    'Low': { background: "bg-blue-100 dark:bg-blue-950", prioritycolor: "text-blue-600 dark:text-blue-400" },
+    'Medium': { background: "bg-amber-100 dark:bg-amber-950", prioritycolor: "text-amber-600 dark:text-amber-400" },
+    'High': { background: "bg-orange-100 dark:bg-orange-950", prioritycolor: "text-orange-600 dark:text-orange-400" },
+    'Urgent': { background: "bg-red-100 dark:bg-red-950", prioritycolor: "text-red-600 dark:text-red-400" },
 };
 
 const ProjectTasks = ({ tasks }) => {
@@ -58,18 +58,28 @@ const ProjectTasks = ({ tasks }) => {
         try {
             toast.loading("Updating status...");
 
-            //  Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const token = localStorage.getItem('token');
+            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
 
-            let updatedTask = structuredClone(tasks.find((t) => t.id === taskId));
-            updatedTask.status = newStatus;
-            dispatch(updateTask(updatedTask));
+            const data = await response.json();
 
-            toast.dismissAll();
-            toast.success("Task status updated successfully");
+            if (response.ok) {
+                dispatch(updateTask(data.data));
+                toast.dismissAll();
+                toast.success("Task status updated successfully");
+            } else {
+                throw new Error(data.error || "Failed to update status");
+            }
         } catch (error) {
             toast.dismissAll();
-            toast.error(error?.response?.data?.message || error.message);
+            toast.error(error.message);
         }
     };
 
@@ -79,17 +89,25 @@ const ProjectTasks = ({ tasks }) => {
             if (!confirm) return;
 
             toast.loading("Deleting tasks...");
+            const token = localStorage.getItem('token');
 
-            //  Simulate API call
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            for (const taskId of selectedTasks) {
+                await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+            }
 
-            dispatch(deleteTask(selectedTasks));
+            dispatch(deleteTask({ taskIds: selectedTasks }));
 
+            setSelectedTasks([]);
             toast.dismissAll();
             toast.success("Tasks deleted successfully");
         } catch (error) {
             toast.dismissAll();
-            toast.error(error?.response?.data?.message || error.message);
+            toast.error(error.message);
         }
     };
 
@@ -101,23 +119,24 @@ const ProjectTasks = ({ tasks }) => {
                     const options = {
                         status: [
                             { label: "All Statuses", value: "" },
-                            { label: "To Do", value: "TODO" },
-                            { label: "In Progress", value: "IN_PROGRESS" },
-                            { label: "Done", value: "DONE" },
+                            { label: "To Do", value: "To Do" },
+                            { label: "In Progress", value: "In Progress" },
+                            { label: "Done", value: "Done" },
+                            { label: "Backlog", value: "Backlog" },
                         ],
                         type: [
                             { label: "All Types", value: "" },
-                            { label: "Task", value: "TASK" },
-                            { label: "Bug", value: "BUG" },
-                            { label: "Feature", value: "FEATURE" },
-                            { label: "Improvement", value: "IMPROVEMENT" },
-                            { label: "Other", value: "OTHER" },
+                            { label: "Task", value: "Task" },
+                            { label: "Bug", value: "Bug" },
+                            { label: "Feature", value: "Feature" },
+                            { label: "Story", value: "Story" },
                         ],
                         priority: [
                             { label: "All Priorities", value: "" },
-                            { label: "Low", value: "LOW" },
-                            { label: "Medium", value: "MEDIUM" },
-                            { label: "High", value: "HIGH" },
+                            { label: "Low", value: "Low" },
+                            { label: "Medium", value: "Medium" },
+                            { label: "High", value: "High" },
+                            { label: "Urgent", value: "Urgent" },
                         ],
                         assignee: [
                             { label: "All Assignees", value: "" },
@@ -181,7 +200,7 @@ const ProjectTasks = ({ tasks }) => {
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-2">
                                                         {Icon && <Icon className={`size-4 ${color}`} />}
-                                                        <span className={`uppercase text-xs ${color}`}>{task.type}</span>
+                                                        <span className={`text-xs ${color}`}>{task.type}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-2">
@@ -191,23 +210,29 @@ const ProjectTasks = ({ tasks }) => {
                                                 </td>
                                                 <td onClick={e => e.stopPropagation()} className="px-4 py-2">
                                                     <select name="status" onChange={(e) => handleStatusChange(task.id, e.target.value)} value={task.status} className="group-hover:ring ring-zinc-100 outline-none px-2 pr-4 py-1 rounded text-sm text-zinc-900 dark:text-zinc-200 cursor-pointer" >
-                                                        <option value="TODO">To Do</option>
-                                                        <option value="IN_PROGRESS">In Progress</option>
-                                                        <option value="DONE">Done</option>
+                                                        <option value="To Do">To Do</option>
+                                                        <option value="In Progress">In Progress</option>
+                                                        <option value="Done">Done</option>
+                                                        <option value="Backlog">Backlog</option>
                                                     </select>
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-2">
-                                                        <img src={task.assignee?.image} className="size-5 rounded-full" alt="avatar" />
+                                                        <div className="size-5 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] font-bold">
+                                                            {task.assignee?.name?.charAt(0) || "-"}
+                                                        </div>
                                                         {task.assignee?.name || "-"}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400">
                                                         <CalendarIcon className="size-4" />
-                                                        {format(new Date(task.due_date), "dd MMMM")}
+                                                        {task.dueDate && !isNaN(new Date(task.dueDate).getTime())
+                                                            ? format(new Date(task.dueDate), "dd MMMM")
+                                                            : "-"}
                                                     </div>
                                                 </td>
+
                                             </tr>
                                         );
                                     })
@@ -250,20 +275,25 @@ const ProjectTasks = ({ tasks }) => {
                                         <div>
                                             <label className="text-zinc-600 dark:text-zinc-400 text-xs">Status</label>
                                             <select name="status" onChange={(e) => handleStatusChange(task.id, e.target.value)} value={task.status} className="w-full mt-1 bg-zinc-100 dark:bg-zinc-800 ring-1 ring-zinc-300 dark:ring-zinc-700 outline-none px-2 py-1 rounded text-sm text-zinc-900 dark:text-zinc-200" >
-                                                <option value="TODO">To Do</option>
-                                                <option value="IN_PROGRESS">In Progress</option>
-                                                <option value="DONE">Done</option>
+                                                <option value="To Do">To Do</option>
+                                                <option value="In Progress">In Progress</option>
+                                                <option value="Done">Done</option>
+                                                <option value="Backlog">Backlog</option>
                                             </select>
                                         </div>
 
                                         <div className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                                            <img src={task.assignee?.image} className="size-5 rounded-full" alt="avatar" />
+                                            <div className="size-5 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[10px] font-bold">
+                                                {task.assignee?.name?.charAt(0) || "-"}
+                                            </div>
                                             {task.assignee?.name || "-"}
                                         </div>
 
                                         <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
                                             <CalendarIcon className="size-4" />
-                                            {format(new Date(task.due_date), "dd MMMM")}
+                                            {task.dueDate && !isNaN(new Date(task.dueDate).getTime())
+                                                ? format(new Date(task.dueDate), "dd MMMM")
+                                                : "-"}
                                         </div>
                                     </div>
                                 );

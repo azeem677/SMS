@@ -96,7 +96,7 @@ export const createProject = createAsyncThunk(
         try {
             console.log("Creating project with payload:", projectData);
             const token = getState().auth.token;
-            const response = await fetch("http://localhost:5000z-10 bg-white dark:bg-zinc-900 min-w-68 flex flex-col h-screen border-r border-gray-200 dark:border-zinc-800 max-sm:absolute transition-all -left-full z-10 bg-white dark:bg-zinc-900 min-w-68 flex flex-col h-screen border-r border-gray-200 dark:border-zinc-800 max-sm:absolute transition-all -left-full /api/projects", {
+            const response = await fetch("http://localhost:5000/api/projects", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -120,6 +120,99 @@ export const createProject = createAsyncThunk(
         }
     }
 );
+
+export const fetchTasks = createAsyncThunk(
+    "workspace/fetchTasks",
+    async (projectId, { getState, rejectWithValue }) => {
+        try {
+            const token = getState().auth.token;
+            const url = projectId
+                ? `http://localhost:5000/api/projects/${projectId}/tasks`
+                : "http://localhost:5000/api/tasks";
+
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                return rejectWithValue(errorData.error || errorData.message || "Failed to fetch tasks");
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+export const createTaskFromServer = createAsyncThunk(
+    "workspace/createTaskFromServer",
+    async (taskData, { getState, rejectWithValue }) => {
+        try {
+            const token = getState().auth.token;
+            const projectId = taskData.projectId || taskData.project;
+
+            // Prefer project-specific URL if projectId is available
+            const url = projectId
+                ? `http://localhost:5000/api/projects/${projectId}/tasks`
+                : "http://localhost:5000/api/tasks";
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(taskData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                return rejectWithValue(errorData.error || errorData.message || "Failed to create task");
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+export const fetchTaskById = createAsyncThunk(
+    "workspace/fetchTaskById",
+    async ({ projectId, taskId }, { getState, rejectWithValue }) => {
+        try {
+            const token = getState().auth.token;
+            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                return rejectWithValue(errorData.error || errorData.message || "Failed to fetch task");
+            }
+
+            const data = await response.json();
+            const task = data.data;
+            const resolvedProjectId = (projectId && projectId !== "undefined")
+                ? projectId
+                : (task.project?._id || task.project?.id || task.project);
+
+            return { task, projectId: resolvedProjectId };
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+
 
 const workspaceSlice = createSlice({
     name: "workspace",
@@ -280,7 +373,13 @@ const workspaceSlice = createSlice({
                         projects: (w.projects || []).map(p => ({
                             ...p,
                             id: p.id || p._id,
-                            tasks: (p.tasks || []).map(t => ({ ...t, id: t.id || t._id }))
+                            members: p.members || [],
+                            tasks: (p.tasks || []).map(t => ({
+                                ...t,
+                                id: t.id || t._id,
+                                projectId: p.id || p._id,
+                                assignee: t.assignee ? (typeof t.assignee === 'object' ? { ...t.assignee, id: t.assignee.id || t.assignee._id } : t.assignee) : null
+                            }))
                         }))
                     }));
 
@@ -315,9 +414,15 @@ const workspaceSlice = createSlice({
                     ...p,
                     id: p.id || p._id,
                     name: p.name || "Untitled Project",
-                    status: (p.status || "Planning").toUpperCase().replace(" ", "_"),
-                    priority: (p.priority || "Medium").toUpperCase(),
-                    tasks: (p.tasks || []).map(t => ({ ...t, id: t.id || t._id }))
+                    status: p.status ? (p.status.charAt(0).toUpperCase() + p.status.slice(1).toLowerCase().replace('_', ' ')) : "Planning",
+                    priority: p.priority ? (p.priority.charAt(0).toUpperCase() + p.priority.slice(1).toLowerCase()) : "Medium",
+                    members: p.members || [],
+                    tasks: (p.tasks || []).map(t => ({
+                        ...t,
+                        id: t.id || t._id,
+                        projectId: p.id || p._id,
+                        assignee: t.assignee ? (typeof t.assignee === 'object' ? { ...t.assignee, id: t.assignee.id || t.assignee._id } : t.assignee) : null
+                    }))
                 }));
 
                 if (state.currentWorkspace) {
@@ -349,9 +454,14 @@ const workspaceSlice = createSlice({
                     projectPayload = {
                         ...projectPayload,
                         id: projectPayload.id || projectPayload._id,
-                        status: (projectPayload.status || "Planning").toUpperCase().replace(" ", "_"),
-                        priority: (projectPayload.priority || "Medium").toUpperCase(),
-                        tasks: (projectPayload.tasks || []).map(t => ({ ...t, id: t.id || t._id }))
+                        status: projectPayload.status ? (projectPayload.status.charAt(0).toUpperCase() + projectPayload.status.slice(1).toLowerCase().replace('_', ' ')) : "Planning",
+                        priority: projectPayload.priority ? (projectPayload.priority.charAt(0).toUpperCase() + projectPayload.priority.slice(1).toLowerCase()) : "Medium",
+                        members: projectPayload.members || [],
+                        tasks: (projectPayload.tasks || []).map(t => ({
+                            ...t,
+                            id: t.id || t._id,
+                            assignee: t.assignee ? (typeof t.assignee === 'object' ? { ...t.assignee, id: t.assignee.id || t.assignee._id } : t.assignee) : null
+                        }))
                     };
                 }
 
@@ -365,9 +475,88 @@ const workspaceSlice = createSlice({
             })
             .addCase(createProject.rejected, (state) => {
                 state.loading = false;
+            })
+            .addCase(fetchTasks.fulfilled, (state, action) => {
+                // Normalize tasks and add to state
+                const tasks = (action.payload?.data || action.payload || []).map(t => {
+                    const projectData = t.project;
+                    const pId = typeof projectData === 'object' ? (projectData._id || projectData.id) : projectData;
+                    return {
+                        ...t,
+                        id: t.id || t._id,
+                        projectId: pId,
+                        assignee: t.assignee ? (typeof t.assignee === 'object' ? { ...t.assignee, id: t.assignee.id || t.assignee._id } : t.assignee) : null
+                    };
+                });
+
+                // If tasks belong to a specific project, update that project's tasks
+                if (tasks.length > 0 && tasks[0].project) {
+                    const projectId = typeof tasks[0].project === 'string' ? tasks[0].project : tasks[0].project._id || tasks[0].project.id;
+
+                    if (state.currentWorkspace) {
+                        state.currentWorkspace.projects = state.currentWorkspace.projects.map(p =>
+                            p.id === projectId ? { ...p, tasks } : p
+                        );
+                        state.workspaces = state.workspaces.map(w =>
+                            w.id === state.currentWorkspace.id ? {
+                                ...w, projects: w.projects.map(p =>
+                                    p.id === projectId ? { ...p, tasks } : p
+                                )
+                            } : w
+                        );
+                    }
+                }
+                persistState(state);
+            })
+            .addCase(createTaskFromServer.fulfilled, (state, action) => {
+                const task = action.payload?.data || action.payload;
+                if (task) {
+                    const projectData = task.project;
+                    const pId = typeof projectData === 'object' ? (projectData._id || projectData.id) : projectData;
+                    const normalizedTask = {
+                        ...task,
+                        id: task.id || task._id,
+                        projectId: pId,
+                        assignee: task.assignee ? (typeof task.assignee === 'object' ? { ...task.assignee, id: task.assignee.id || task.assignee._id } : task.assignee) : null
+                    };
+                    const projectId = typeof task.project === 'string' ? task.project : task.project._id || task.project.id;
+
+                    if (state.currentWorkspace) {
+                        state.currentWorkspace.projects = state.currentWorkspace.projects.map(p =>
+                            p.id === projectId ? { ...p, tasks: [...(p.tasks || []), normalizedTask] } : p
+                        );
+                        state.workspaces = state.workspaces.map(w =>
+                            w.id === state.currentWorkspace.id ? {
+                                ...w, projects: w.projects.map(p =>
+                                    p.id === projectId ? { ...p, tasks: [...(p.tasks || []), normalizedTask] } : p
+                                )
+                            } : w
+                        );
+                    }
+                }
+                persistState(state);
+            })
+            .addCase(fetchTaskById.fulfilled, (state, action) => {
+                const { task, projectId } = action.payload;
+                if (task) {
+                    const normalizedTask = {
+                        ...task,
+                        id: task.id || task._id,
+                        projectId: projectId || (task.project?._id || task.project?.id || task.project)
+                    };
+                    if (state.currentWorkspace && normalizedTask.projectId) {
+                        state.currentWorkspace.projects = state.currentWorkspace.projects.map(p =>
+                            p.id === normalizedTask.projectId
+                                ? { ...p, tasks: (p.tasks || []).some(t => t.id === normalizedTask.id) ? p.tasks.map(t => t.id === normalizedTask.id ? normalizedTask : t) : [...(p.tasks || []), normalizedTask] }
+                                : p
+                        );
+                    }
+                }
+                persistState(state);
             });
     },
 });
+
 
 export const { setWorkspaces, setCurrentWorkspace, addWorkspace, updateWorkspace, deleteWorkspace, addProject, addTask, updateTask, deleteTask, updateProject } = workspaceSlice.actions;
 export default workspaceSlice.reducer;

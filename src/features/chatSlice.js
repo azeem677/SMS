@@ -109,7 +109,11 @@ const chatSlice = createSlice({
             })
             .addCase(fetchAllUsers.fulfilled, (state, action) => {
                 state.loading = false;
-                state.allUsers = Array.isArray(action.payload) ? action.payload : [];
+                const fetchedUsers = Array.isArray(action.payload) ? action.payload : [];
+                state.allUsers = fetchedUsers.map(u => ({
+                    ...u,
+                    id: u.id || u._id
+                }));
             })
             .addCase(fetchAllUsers.rejected, (state, action) => {
                 state.loading = false;

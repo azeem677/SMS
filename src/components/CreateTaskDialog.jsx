@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { format } from "date-fns";
-import { addTask } from "../features/workspaceSlice";
+import { createTaskFromServer } from "../features/workspaceSlice";
+import { fetchAllUsers } from "../features/chatSlice";
 import toast from "react-hot-toast";
 
 export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, projectId }) {
     const dispatch = useDispatch();
     const currentWorkspace = useSelector((state) => state.workspace?.currentWorkspace || null);
+    const users = useSelector((state) => state.chat?.allUsers || []);
+
+    // Fallback to project members if needed, but we prefer a global users list for assignment
     const project = currentWorkspace?.projects.find((p) => p.id === projectId);
     const teamMembers = project?.members || [];
 
@@ -15,50 +19,56 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
     const [formData, setFormData] = useState({
         title: "",
         description: "",
-        type: "TASK",
-        status: "TODO",
-        priority: "MEDIUM",
+        type: "Task",
+        status: "To Do",
+        priority: "Medium",
         assigneeId: "",
-        due_date: "",
+        dueDate: "",
     });
+
+    useEffect(() => {
+        if (showCreateTask) {
+            dispatch(fetchAllUsers());
+        }
+    }, [showCreateTask, dispatch]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            const assignee = teamMembers.find(m => m.user.id === formData.assigneeId)?.user || null;
-
-            const newTask = {
+            const taskData = {
                 ...formData,
-                id: crypto.randomUUID(),
-                projectId,
-                assignee,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                comments: []
+                project: projectId,
+                assignee: formData.assigneeId || null,
             };
 
-            dispatch(addTask(newTask));
-            toast.success("Task created successfully");
-            setShowCreateTask(false);
-            setFormData({
-                title: "",
-                description: "",
-                type: "TASK",
-                status: "TODO",
-                priority: "MEDIUM",
-                assigneeId: "",
-                due_date: "",
-            });
+            // Remove internal UI state fields not needed by backend
+            delete taskData.assigneeId;
+
+            const resultAction = await dispatch(createTaskFromServer(taskData));
+
+            if (createTaskFromServer.fulfilled.match(resultAction)) {
+                toast.success("Task created successfully");
+                setShowCreateTask(false);
+                setFormData({
+                    title: "",
+                    description: "",
+                    type: "Task",
+                    status: "To Do",
+                    priority: "Medium",
+                    assigneeId: "",
+                    dueDate: "",
+                });
+            } else {
+                toast.error(resultAction.payload || "Failed to create task");
+            }
         } catch (error) {
-            toast.error("Failed to create task");
+            toast.error("An unexpected error occurred");
         } finally {
             setIsSubmitting(false);
         }
     };
+
 
     return showCreateTask ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 dark:bg-black/60 backdrop-blur p-4">
@@ -83,20 +93,20 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Type</label>
                             <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1" >
-                                <option value="BUG">Bug</option>
-                                <option value="FEATURE">Feature</option>
-                                <option value="TASK">Task</option>
-                                <option value="IMPROVEMENT">Improvement</option>
-                                <option value="OTHER">Other</option>
+                                <option value="Bug">Bug</option>
+                                <option value="Feature">Feature</option>
+                                <option value="Task">Task</option>
+                                <option value="Story">Story</option>
                             </select>
                         </div>
 
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Priority</label>
                             <select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1"                             >
-                                <option value="LOW">Low</option>
-                                <option value="MEDIUM">Medium</option>
-                                <option value="HIGH">High</option>
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
                             </select>
                         </div>
                     </div>
@@ -107,20 +117,23 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                             <label className="text-sm font-medium">Assignee</label>
                             <select value={formData.assigneeId} onChange={(e) => setFormData({ ...formData, assigneeId: e.target.value })} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1" >
                                 <option value="">Unassigned</option>
-                                {teamMembers.map((member) => (
-                                    <option key={member?.user.id} value={member?.user.id}>
-                                        {member?.user.email}
-                                    </option>
-                                ))}
+                                {users
+                                    .filter(u => !u.id.startsWith("user_") && !u.email.endsWith("@example.com"))
+                                    .map((u) => (
+                                        <option key={u.id} value={u.id}>
+                                            {u.name} ({u.email})
+                                        </option>
+                                    ))}
                             </select>
                         </div>
 
                         <div className="space-y-1">
                             <label className="text-sm font-medium">Status</label>
                             <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1" >
-                                <option value="TODO">To Do</option>
-                                <option value="IN_PROGRESS">In Progress</option>
-                                <option value="DONE">Done</option>
+                                <option value="To Do">To Do</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Done">Done</option>
+                                <option value="Backlog">Backlog</option>
                             </select>
                         </div>
                     </div>
@@ -130,14 +143,15 @@ export default function CreateTaskDialog({ showCreateTask, setShowCreateTask, pr
                         <label className="text-sm font-medium">Due Date</label>
                         <div className="flex items-center gap-2">
                             <CalendarIcon className="size-5 text-zinc-500 dark:text-zinc-400" />
-                            <input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} min={new Date().toISOString().split('T')[0]} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1" />
+                            <input type="date" value={formData.dueDate} onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })} min={new Date().toISOString().split('T')[0]} className="w-full rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-200 text-sm mt-1" />
                         </div>
-                        {formData.due_date && (
+                        {formData.dueDate && (
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                                {format(new Date(formData.due_date), "PPP")}
+                                {format(new Date(formData.dueDate), "PPP")}
                             </p>
                         )}
                     </div>
+
 
                     {/* Footer */}
                     <div className="flex justify-end gap-2 pt-2">

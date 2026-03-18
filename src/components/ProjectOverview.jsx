@@ -75,7 +75,7 @@ const ProjectOverview = () => {
                                         {project.members?.length > 0 && (
                                             <div className="flex items-center gap-1">
                                                 <UsersIcon className="w-3 h-3" />
-                                                {project.members.length} members
+                                                {project.members?.length} members
                                             </div>
                                         )}
                                         {project.end_date && (

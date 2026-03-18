@@ -24,6 +24,7 @@ const Chat = () => {
     // Live Chat & Messages State
     const [socket, setSocket] = useState(null);
     const [currentMessages, setCurrentMessages] = useState([]);
+    const [onlineUsers, setOnlineUsers] = useState([]);
     const messagesEndRef = useRef(null);
 
     // 1. Initial Data Fetch
@@ -59,6 +60,11 @@ const Chat = () => {
         // Listen for confirmation that our message was sent
         newSocket.on('messageSent', (message) => {
             setCurrentMessages((prevMessages) => [...prevMessages, message]);
+        });
+
+        // Listen for online users list
+        newSocket.on('getUsers', (users) => {
+            setOnlineUsers(users);
         });
 
         return () => newSocket.disconnect();
@@ -111,6 +117,10 @@ const Chat = () => {
         u?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u?.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const isUserOnline = (userId) => {
+        return onlineUsers.some(u => u.userId === userId);
+    };
 
     if (loading && recentChats.length === 0 && allUsers.length === 0) {
         return (
@@ -191,7 +201,7 @@ const Chat = () => {
                                                     {(chat.name || 'U').charAt(0)}
                                                 </div>
                                             )}
-                                            {chat.online && (
+                                            {isUserOnline(chat.id || chat._id) && (
                                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-zinc-900 rounded-full"></div>
                                             )}
                                         </div>
@@ -237,6 +247,9 @@ const Chat = () => {
                                                         {(u?.name || 'U').charAt(0)}
                                                     </div>
                                                 )}
+                                                {isUserOnline(uId) && (
+                                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-zinc-900 rounded-full shadow-sm"></div>
+                                                )}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="text-sm font-semibold text-gray-800 dark:text-zinc-100 truncate">{u?.name}</h3>
@@ -270,25 +283,19 @@ const Chat = () => {
                                                 {(currentChat.name || 'U').charAt(0)}
                                             </div>
                                         )}
-                                        {currentChat.online && (
+                                        {isUserOnline(currentChat.id || currentChat._id) && (
                                             <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-zinc-900 rounded-full"></div>
                                         )}
                                     </div>
                                     <div>
                                         <h2 className="text-sm font-bold text-gray-800 dark:text-zinc-100">{currentChat.name}</h2>
-                                        <p className="text-[11px] text-green-500 font-medium">{currentChat.online ? 'Online' : 'Offline'}</p>
+                                        <p className={`text-[11px] font-medium ${isUserOnline(currentChat.id || currentChat._id) ? 'text-green-500' : 'text-gray-400'}`}>
+                                            {isUserOnline(currentChat.id || currentChat._id) ? 'Online' : 'Offline'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-gray-500 dark:text-zinc-400">
-                                        <Phone size={18} />
-                                    </button>
-                                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-gray-500 dark:text-zinc-400">
-                                        <Video size={18} />
-                                    </button>
-                                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-gray-500 dark:text-zinc-400">
-                                        <Info size={18} />
-                                    </button>
+
                                     <button className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-gray-500 dark:text-zinc-400">
                                         <MoreVertical size={18} />
                                     </button>

@@ -1,27 +1,31 @@
 import { useEffect, useState } from "react";
 import { UsersIcon, Search, UserPlus, Shield, Activity } from "lucide-react";
 import InviteMemberDialog from "../components/InviteMemberDialog";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchAllUsers } from "../features/chatSlice";
 
 const Team = () => {
-
+    const dispatch = useDispatch();
     const [tasks, setTasks] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [users, setUsers] = useState([]);
+
     const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
     const projects = currentWorkspace?.projects || [];
 
-    const filteredUsers = users.filter(
-        (user) =>
-            user?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user?.user?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    const rawChatState = useSelector((state) => state.chat);
+    const allUsers = Array.isArray(rawChatState.allUsers) ? rawChatState.allUsers : (rawChatState.allUsers?.data || []);
+
+    const filteredUsers = allUsers.filter(
+        (u) =>
+            u?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u?.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     useEffect(() => {
-        setUsers(currentWorkspace?.members || []);
+        dispatch(fetchAllUsers());
         setTasks(currentWorkspace?.projects?.reduce((acc, project) => [...acc, ...project.tasks], []) || []);
-    }, [currentWorkspace]);
+    }, [dispatch, currentWorkspace]);
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">
@@ -33,9 +37,7 @@ const Team = () => {
                         Manage team members and their contributions
                     </p>
                 </div>
-                <button onClick={() => setIsDialogOpen(true)} className="flex items-center px-5 py-2 rounded text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:opacity-90 text-white transition" >
-                    <UserPlus className="w-4 h-4 mr-2" /> Invite Member
-                </button>
+
                 <InviteMemberDialog isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
             </div>
 
@@ -46,7 +48,7 @@ const Team = () => {
                     <div className="flex items-center justify-between gap-8 md:gap-22">
                         <div>
                             <p className="text-sm text-gray-500 dark:text-zinc-400">Total Members</p>
-                            <p className="text-xl font-bold text-gray-900 dark:text-white">{users.length}</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white">{allUsers.length}</p>
                         </div>
                         <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/10">
                             <UsersIcon className="size-4 text-blue-500 dark:text-blue-200" />
@@ -97,12 +99,12 @@ const Team = () => {
                             <UsersIcon className="w-12 h-12 text-gray-400 dark:text-zinc-500" />
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                            {users.length === 0
+                            {allUsers.length === 0
                                 ? "No team members yet"
                                 : "No members match your search"}
                         </h3>
                         <p className="text-gray-500 dark:text-zinc-400 mb-6">
-                            {users.length === 0
+                            {allUsers.length === 0
                                 ? "Invite team members to start collaborating"
                                 : "Try adjusting your search term"}
                         </p>
@@ -126,32 +128,38 @@ const Team = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
-                                    {filteredUsers.map((user) => (
+                                    {filteredUsers.map((u) => (
                                         <tr
-                                            key={user.id}
+                                            key={u._id || u.id}
                                             className="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
                                         >
                                             <td className="px-6 py-2.5 whitespace-nowrap flex items-center gap-3">
-                                                <img
-                                                    src={user.user.image}
-                                                    alt={user.user.name}
-                                                    className="size-7 rounded-full bg-gray-200 dark:bg-zinc-800"
-                                                />
+                                                {u.image ? (
+                                                    <img
+                                                        src={u.image}
+                                                        alt={u.name}
+                                                        className="size-7 rounded-full bg-gray-200 dark:bg-zinc-800 object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="size-7 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center uppercase shadow-sm text-sm">
+                                                        {(u.name || 'U').charAt(0)}
+                                                    </div>
+                                                )}
                                                 <span className="text-sm text-zinc-800 dark:text-white truncate">
-                                                    {user.user?.name || "Unknown User"}
+                                                    {u.name || "Unknown User"}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-2.5 whitespace-nowrap text-sm text-gray-500 dark:text-zinc-400">
-                                                {user.user.email}
+                                                {u.email}
                                             </td>
                                             <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span
-                                                    className={`px-2 py-1 text-xs rounded-md ${user.role === "ADMIN"
-                                                            ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
-                                                            : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                                                    className={`px-2 py-1 text-xs rounded-md ${u.role === "admin" || u.role === "ADMIN"
+                                                        ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
+                                                        : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                                                         }`}
                                                 >
-                                                    {user.role || "User"}
+                                                    {(u.role || "User").toUpperCase()}
                                                 </span>
                                             </td>
                                         </tr>
@@ -162,34 +170,40 @@ const Team = () => {
 
                         {/* Mobile Cards */}
                         <div className="sm:hidden space-y-3">
-                            {filteredUsers.map((user) => (
+                            {filteredUsers.map((u) => (
                                 <div
-                                    key={user.id}
+                                    key={u._id || u.id}
                                     className="p-4 border border-gray-200 dark:border-zinc-800 rounded-md bg-white dark:bg-zinc-900"
                                 >
                                     <div className="flex items-center gap-3 mb-2">
-                                        <img
-                                            src={user.user.image}
-                                            alt={user.user.name}
-                                            className="size-9 rounded-full bg-gray-200 dark:bg-zinc-800"
-                                        />
+                                        {u.image ? (
+                                            <img
+                                                src={u.image}
+                                                alt={u.name}
+                                                className="size-9 rounded-full bg-gray-200 dark:bg-zinc-800 object-cover"
+                                            />
+                                        ) : (
+                                            <div className="size-9 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold flex items-center justify-center uppercase shadow-sm text-sm">
+                                                {(u.name || 'U').charAt(0)}
+                                            </div>
+                                        )}
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-white">
-                                                {user.user?.name || "Unknown User"}
+                                                {u.name || "Unknown User"}
                                             </p>
                                             <p className="text-sm text-gray-500 dark:text-zinc-400">
-                                                {user.user.email}
+                                                {u.email}
                                             </p>
                                         </div>
                                     </div>
                                     <div>
                                         <span
-                                            className={`px-2 py-1 text-xs rounded-md ${user.role === "ADMIN"
-                                                    ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
-                                                    : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
+                                            className={`px-2 py-1 text-xs rounded-md ${u.role === "admin" || u.role === "ADMIN"
+                                                ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
+                                                : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                                                 }`}
                                         >
-                                            {user.role || "User"}
+                                            {(u.role || "User").toUpperCase()}
                                         </span>
                                     </div>
                                 </div>
