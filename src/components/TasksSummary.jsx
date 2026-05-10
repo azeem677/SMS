@@ -3,8 +3,10 @@ import { ArrowRight, Clock, AlertTriangle, User } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { selectCurrentUser } from "../features/authSlice";
+import { useTranslation } from "react-i18next";
 
 export default function TasksSummary() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { currentWorkspace } = useSelector((state) => state.workspace);
     const user = useSelector(selectCurrentUser);
@@ -29,21 +31,21 @@ export default function TasksSummary() {
 
     const summaryCards = [
         {
-            title: "My Tasks",
+            title: t("My Tasks"),
             count: myTasks.length,
             icon: User,
             color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400",
             items: myTasks.slice(0, 3)
         },
         {
-            title: "Overdue",
+            title: t("Overdue"),
             count: overdueTasks.length,
             icon: AlertTriangle,
             color: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-400",
             items: overdueTasks.slice(0, 3)
         },
         {
-            title: "In Progress",
+            title: t("In Progress"),
             count: inProgressIssues.length,
             icon: Clock,
             color: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400",
@@ -71,7 +73,7 @@ export default function TasksSummary() {
                     <div className="p-4">
                         {card.items.length === 0 ? (
                             <p className="text-sm text-gray-500 dark:text-zinc-400 text-center py-4">
-                                No {card.title.toLowerCase()}
+                                {t("No tasks found")}
                             </p>
                         ) : (
                             <div className="space-y-3">
@@ -81,12 +83,12 @@ export default function TasksSummary() {
                                             {issue.title}
                                         </h4>
                                         <p className="text-xs text-gray-600 dark:text-zinc-400 capitalize mt-1">
-                                            {issue.type} • {issue.priority} priority
+                                            {t(issue.type)} • {t(issue.priority)} {t("priority")}
                                         </p>
                                     </div>
                                 ))}
                                 <button onClick={() => navigate('/my-tasks')} className="flex items-center justify-center w-full text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-white mt-4 border-t border-zinc-100 dark:border-zinc-900 pt-3">
-                                    View all tasks <ArrowRight className="w-3 h-3 ml-2" />
+                                    {t("View all tasks")} <ArrowRight className="w-3 h-3 ml-2" />
                                 </button>
                             </div>
                         )}

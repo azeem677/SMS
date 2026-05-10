@@ -1,8 +1,10 @@
 import { FolderOpen, CheckCircle, Users, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 
 export default function StatsGrid() {
+    const { t } = useTranslation();
     const currentWorkspace = useSelector(
         (state) => state?.workspace?.currentWorkspace || null
     );
@@ -18,33 +20,33 @@ export default function StatsGrid() {
     const statCards = [
         {
             icon: FolderOpen,
-            title: "Total Projects",
+            title: t("Total Projects"),
             value: stats.totalProjects,
-            subtitle: `projects in ${currentWorkspace?.name}`,
+            subtitle: `${t("projects in")} ${currentWorkspace?.name}`,
             bgColor: "bg-blue-500/10",
             textColor: "text-blue-500",
         },
         {
             icon: CheckCircle,
-            title: "Completed Projects",
+            title: t("Completed Projects"),
             value: stats.completedProjects,
-            subtitle: `of ${stats.totalProjects} total`,
+            subtitle: `${t("of")} ${stats.totalProjects} ${t("total")}`,
             bgColor: "bg-emerald-500/10",
             textColor: "text-emerald-500",
         },
         {
             icon: Users,
-            title: "My Tasks",
+            title: t("My Tasks"),
             value: stats.myTasks,
-            subtitle: "assigned to me",
+            subtitle: t("assigned to me"),
             bgColor: "bg-purple-500/10",
             textColor: "text-purple-500",
         },
         {
             icon: AlertTriangle,
-            title: "Overdue",
+            title: t("Overdue"),
             value: stats.overdueIssues,
-            subtitle: "need attention",
+            subtitle: t("need attention"),
             bgColor: "bg-amber-500/10",
             textColor: "text-amber-500",
         },

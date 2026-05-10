@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, UserPlus, Github, User } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "../components/LanguageSelector";
 
 const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -10,6 +12,7 @@ const Register = () => {
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -46,20 +49,24 @@ const Register = () => {
             <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-700"></div>
 
+            <div className="absolute top-4 right-4 z-50">
+                <LanguageSelector />
+            </div>
+
             <div className="relative w-full max-w-md">
                 {/* Register Card */}
                 <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
                     <div className="p-8">
                         <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Create Account</h1>
-                            <p className="text-slate-500 dark:text-slate-400">Join our community today</p>
+                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{t("Create Account Tit")}</h1>
+                            <p className="text-slate-500 dark:text-slate-400">{t("Join our community today")}</p>
                         </div>
 
                         <form onSubmit={handleRegister} className="space-y-5">
                             {/* Name Field */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                                    Full Name
+                                    {t("Full Name")}
                                 </label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -79,7 +86,7 @@ const Register = () => {
                             {/* Email Field */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                                    Email Address
+                                    {t("Email Address")}
                                 </label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -99,7 +106,7 @@ const Register = () => {
                             {/* Password Field */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                                    Password
+                                    {t("Password")}
                                 </label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -131,7 +138,7 @@ const Register = () => {
                                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 transition-all"
                                     />
                                     <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
-                                        I agree to the <a href="#" className="text-blue-600 hover:underline">Terms of Service</a>
+                                        {t("I agree to the")} <a href="#" className="text-blue-600 hover:underline">{t("Terms of Service")}</a>
                                     </span>
                                 </label>
                             </div>
@@ -145,7 +152,7 @@ const Register = () => {
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
                                     <>
-                                        <span>Create Account</span>
+                                        <span>{t("Create Account Tit")}</span>
                                         <UserPlus size={18} />
                                     </>
                                 )}
@@ -157,27 +164,27 @@ const Register = () => {
                                 <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-500">Or register with</span>
+                                <span className="px-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-500">{t("Or register with")}</span>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <button className="flex items-center justify-center space-x-2 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                 <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Google</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("Google")}</span>
                             </button>
                             <button className="flex items-center justify-center space-x-2 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                 <Github size={18} className="text-slate-900 dark:text-white" />
-                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">GitHub</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("GitHub")}</span>
                             </button>
                         </div>
                     </div>
 
                     <div className="px-8 py-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 text-center">
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Already have an account?{" "}
+                            {t("Already have an account?")}{" "}
                             <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
-                                Sign In
+                                {t("Sign In")}
                             </Link>
                         </p>
                     </div>

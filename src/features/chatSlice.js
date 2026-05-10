@@ -5,7 +5,7 @@ export const fetchRecentChats = createAsyncThunk(
     async (_, { getState, rejectWithValue }) => {
         try {
             const token = getState().auth.token;
-            const response = await fetch('http://localhost:5000/api/chat/', {
+            const response = await fetch('http://localhost:5000/api/chat/recent', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

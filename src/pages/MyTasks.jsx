@@ -17,7 +17,8 @@ import {
     GitCommit
 } from "lucide-react";
 import { selectCurrentUser } from "../features/authSlice";
-import { fetchProjects } from "../features/workspaceSlice";
+import { fetchProjects, fetchTasks } from "../features/workspaceSlice";
+import { useTranslation } from "react-i18next";
 
 const typeIcons = {
     'Bug': { icon: Bug, color: "text-red-600 dark:text-red-400" },
@@ -38,6 +39,7 @@ export default function MyTasks() {
     const navigate = useNavigate();
     const user = useSelector(selectCurrentUser);
     const { currentWorkspace } = useSelector((state) => state.workspace);
+    const { t } = useTranslation();
 
     const [view, setView] = useState("list"); // list or grid
     const [searchTerm, setSearchTerm] = useState("");
@@ -45,6 +47,7 @@ export default function MyTasks() {
 
     useEffect(() => {
         dispatch(fetchProjects());
+        dispatch(fetchTasks());
     }, [dispatch]);
 
     const allTasks = useMemo(() => {
@@ -90,10 +93,10 @@ export default function MyTasks() {
                 <div>
                     <h1 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                         <CheckSquare className="size-6 text-blue-500" />
-                        My Tasks
+                        {t("My Tasks")}
                     </h1>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                        Manage and track all tasks assigned to you across your projects.
+                        {t("Manage and track all tasks assigned to you across your projects.")}
                     </p>
                 </div>
 
@@ -116,10 +119,10 @@ export default function MyTasks() {
             {/* Stats Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                    { label: "Total Assignments", value: stats.total, icon: CheckSquare, color: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" },
-                    { label: "In Progress", value: stats.inProgress, icon: Clock, color: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" },
-                    { label: "Completed", value: stats.completed, icon: CheckSquare, color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" },
-                    { label: "Overdue", value: stats.overdue, icon: AlertTriangle, color: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400" },
+                    { label: t("Total Assignments"), value: stats.total, icon: CheckSquare, color: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" },
+                    { label: t("In Progress"), value: stats.inProgress, icon: Clock, color: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" },
+                    { label: t("Completed"), value: stats.completed, icon: CheckSquare, color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" },
+                    { label: t("Overdue"), value: stats.overdue, icon: AlertTriangle, color: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400" },
                 ].map((stat, i) => (
                     <div key={i} className="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center gap-4">
                         <div className={`p-2 rounded-lg ${stat.color}`}>
@@ -139,7 +142,7 @@ export default function MyTasks() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-400" />
                     <input
                         type="text"
-                        placeholder="Search tasks..."
+                        placeholder={t("Search tasks...")}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -152,11 +155,11 @@ export default function MyTasks() {
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        <option value="All">All Statuses</option>
-                        <option value="To Do">To Do</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Done">Done</option>
-                        <option value="Backlog">Backlog</option>
+                        <option value="All">{t("All Statuses")}</option>
+                        <option value="To Do">{t("To Do")}</option>
+                        <option value="In Progress">{t("In Progress")}</option>
+                        <option value="Done">{t("Done")}</option>
+                        <option value="Backlog">{t("Backlog")}</option>
                     </select>
                 </div>
             </div>
@@ -167,11 +170,11 @@ export default function MyTasks() {
                     <div className="p-4 bg-white dark:bg-zinc-900 rounded-full shadow-sm mb-4">
                         <CheckSquare className="size-8 text-zinc-300 dark:text-zinc-700" />
                     </div>
-                    <h3 className="text-lg font-medium text-zinc-900 dark:text-white">No tasks found</h3>
+                    <h3 className="text-lg font-medium text-zinc-900 dark:text-white">{t("No tasks found")}</h3>
                     <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-xs text-center mt-1">
                         {searchTerm || statusFilter !== "All"
-                            ? "Try adjusting your filters or search term."
-                            : "You don't have any tasks assigned to you in this workspace."}
+                            ? t("Try adjusting your filters or search term.")
+                            : t("You don't have any tasks assigned to you in this workspace.")}
                     </p>
                 </div>
             ) : view === "list" ? (
@@ -181,11 +184,11 @@ export default function MyTasks() {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800">
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">Title</th>
-                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">Project</th>
-                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">Priority</th>
-                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">Due Date</th>
-                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white text-right">Status</th>
+                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">{t("Title")}</th>
+                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">{t("Project")}</th>
+                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">{t("Priority")}</th>
+                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white">{t("Due Date")}</th>
+                                    <th className="px-6 py-4 font-semibold text-zinc-900 dark:text-white text-right">{t("Status")}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">

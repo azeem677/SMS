@@ -489,22 +489,37 @@ const workspaceSlice = createSlice({
                     };
                 });
 
-                // If tasks belong to a specific project, update that project's tasks
-                if (tasks.length > 0 && tasks[0].project) {
-                    const projectId = typeof tasks[0].project === 'string' ? tasks[0].project : tasks[0].project._id || tasks[0].project.id;
+                if (tasks.length > 0 && state.currentWorkspace) {
+                    // Group tasks by projectId
+                    const tasksByProject = {};
+                    tasks.forEach(t => {
+                        if (!tasksByProject[t.projectId]) tasksByProject[t.projectId] = [];
+                        tasksByProject[t.projectId].push(t);
+                    });
 
-                    if (state.currentWorkspace) {
-                        state.currentWorkspace.projects = state.currentWorkspace.projects.map(p =>
-                            p.id === projectId ? { ...p, tasks } : p
-                        );
-                        state.workspaces = state.workspaces.map(w =>
-                            w.id === state.currentWorkspace.id ? {
-                                ...w, projects: w.projects.map(p =>
-                                    p.id === projectId ? { ...p, tasks } : p
-                                )
-                            } : w
-                        );
-                    }
+                    state.currentWorkspace.projects = state.currentWorkspace.projects.map(p => {
+                        // If we fetched a specific project's tasks, we overwrite them.
+                        // If we fetched all tasks, we might want to also overwrite p.tasks if tasksByProject has them.
+                        if (action.meta.arg) {
+                            // Single project fetch
+                            return p.id === action.meta.arg ? { ...p, tasks: tasksByProject[p.id] || [] } : p;
+                        } else {
+                            // All tasks fetch
+                            return { ...p, tasks: tasksByProject[p.id] || [] };
+                        }
+                    });
+
+                    state.workspaces = state.workspaces.map(w =>
+                        w.id === state.currentWorkspace.id ? {
+                            ...w, projects: w.projects.map(p => {
+                                if (action.meta.arg) {
+                                    return p.id === action.meta.arg ? { ...p, tasks: tasksByProject[p.id] || [] } : p;
+                                } else {
+                                    return { ...p, tasks: tasksByProject[p.id] || [] };
+                                }
+                            })
+                        } : w
+                    );
                 }
                 persistState(state);
             })

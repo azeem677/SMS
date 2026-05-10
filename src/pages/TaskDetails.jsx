@@ -7,8 +7,10 @@ import { CalendarIcon, MessageCircle, PenIcon } from "lucide-react";
 import { fetchProjects, fetchTaskById } from "../features/workspaceSlice";
 import { selectCurrentUser } from "../features/authSlice";
 import { assets } from "../assets/assets";
+import { useTranslation } from "react-i18next";
 
 const TaskDetails = () => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const [searchParams] = useSearchParams();
     const projectId = searchParams.get("projectId");
@@ -137,8 +139,8 @@ const TaskDetails = () => {
 
     if (!task) return (
         <div className="max-w-6xl mx-auto p-4 text-center py-20">
-            <div className="text-red-500 text-xl font-medium">Task not found</div>
-            <p className="text-zinc-500 mt-2">The task you are looking for does not exist or has been moved.</p>
+            <div className="text-red-500 text-xl font-medium">{t("Task not found")}</div>
+            <p className="text-zinc-500 mt-2">{t("The task you are looking for does not exist or has been moved.")}</p>
         </div>
     );
 
@@ -150,7 +152,7 @@ const TaskDetails = () => {
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-base font-semibold flex items-center gap-2 text-gray-900 dark:text-white">
                             <MessageCircle className="size-5 text-blue-500" />
-                            Task Discussion
+                            {t("Task Discussion")}
                             <span className="text-xs font-normal bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-500">{comments.length}</span>
                         </h2>
                     </div>
@@ -162,7 +164,7 @@ const TaskDetails = () => {
                                     <div key={comment.id} className={`max-w-[85%] p-3 rounded-2xl shadow-sm border ${comment.user.id === user?.id ? "ml-auto bg-blue-600 text-white border-blue-500" : "mr-auto bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200"}`} >
                                         <div className="flex items-center gap-2 mb-1.5 text-xs opacity-80">
                                             <img src={comment.user.image} alt="avatar" className="size-4 rounded-full border border-white/50" />
-                                            <span className="font-semibold">{comment.user.id === user?.id ? "You" : comment.user.name}</span>
+                                            <span className="font-semibold">{comment.user.id === user?.id ? t("You") : comment.user.name}</span>
                                             <span>
                                                 • {format(new Date(comment.createdAt), "HH:mm")}
                                             </span>
@@ -174,7 +176,7 @@ const TaskDetails = () => {
                         ) : (
                             <div className="flex flex-col items-center justify-center h-full opacity-50 grayscale">
                                 <MessageCircle className="size-12 mb-2" />
-                                <p className="text-sm">No comments yet. Start the conversation!</p>
+                                <p className="text-sm">{t("No comments yet. Start the conversation!")}</p>
                             </div>
                         )}
                     </div>
@@ -185,12 +187,12 @@ const TaskDetails = () => {
                             <textarea
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
-                                placeholder="Write a comment..."
+                                placeholder={t("Write a comment...")}
                                 className="flex-1 bg-transparent border-none rounded-md p-2 text-sm text-gray-900 dark:text-zinc-200 resize-none focus:outline-none placeholder:text-zinc-500"
                                 rows={2}
                             />
                             <button onClick={handleAddComment} className="bg-blue-600 hover:bg-blue-700 transition-colors text-white text-sm font-medium px-4 py-2 rounded-lg shadow-sm h-fit" >
-                                Post
+                                {t("Post")}
                             </button>
                         </div>
                     </div>
@@ -223,23 +225,23 @@ const TaskDetails = () => {
 
                     {task.description && (
                         <div>
-                            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Description</p>
+                            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1.5">{t("Description")}</p>
                             <p className="text-sm text-gray-600 dark:text-zinc-400 leading-[1.6]">{task.description}</p>
                         </div>
                     )}
 
                     <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 grid grid-cols-2 gap-4">
                         <div>
-                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Assignee</p>
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">{t("Assignee")}</p>
                             <div className="flex items-center gap-2">
                                 <div className="size-6 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
                                     {task.assignee?.name?.charAt(0) || "-"}
                                 </div>
-                                <span className="text-sm font-medium">{task.assignee?.name || "Unassigned"}</span>
+                                <span className="text-sm font-medium">{task.assignee?.name || t("Unassigned")}</span>
                             </div>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">Deadline</p>
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5">{t("Deadline")}</p>
                             <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
                                 <CalendarIcon className="size-4 opacity-70" />
                                 <span className="text-sm font-medium">{task.dueDate ? format(new Date(task.dueDate), "dd MMM yyyy") : "-"}</span>
@@ -251,7 +253,7 @@ const TaskDetails = () => {
                 {/* Project Info */}
                 {project && (
                     <div className="p-6 rounded-lg bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-800 shadow-sm">
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Project Context</p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">{t("Project Context")}</p>
 
                         <div className="flex items-center gap-3 mb-4">
                             <div className="size-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 border border-zinc-200 dark:border-zinc-700">
@@ -259,14 +261,14 @@ const TaskDetails = () => {
                             </div>
                             <div>
                                 <h3 className="text-base font-bold text-gray-900 dark:text-zinc-100 leading-tight">{project.name}</h3>
-                                <p className="text-xs text-zinc-500 mt-0.5">Started {project.startDate ? format(new Date(project.startDate), "MMM yyyy") : "-"}</p>
+                                <p className="text-xs text-zinc-500 mt-0.5">{t("Started")} {project.startDate ? format(new Date(project.startDate), "MMM yyyy") : "-"}</p>
                             </div>
                         </div>
 
                         <div className="space-y-4">
                             <div className="space-y-1.5">
                                 <div className="flex justify-between text-[11px] font-medium">
-                                    <span className="text-zinc-500">Completion</span>
+                                    <span className="text-zinc-500">{t("Completion")}</span>
                                     <span className="text-blue-500">{project.progress || 0}%</span>
                                 </div>
                                 <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
@@ -275,7 +277,7 @@ const TaskDetails = () => {
                             </div>
 
                             <div className="flex items-center justify-between pt-2">
-                                <span className="text-xs font-medium text-zinc-500">Priority Level</span>
+                                <span className="text-xs font-medium text-zinc-500">{t("Priority Level")}</span>
                                 <span className="px-2 py-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 uppercase tracking-wider">
                                     {project.priority}
                                 </span>

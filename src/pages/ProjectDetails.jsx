@@ -8,8 +8,10 @@ import ProjectSettings from "../components/ProjectSettings";
 import CreateTaskDialog from "../components/CreateTaskDialog";
 import ProjectCalendar from "../components/ProjectCalendar";
 import ProjectTasks from "../components/ProjectTasks";
+import { useTranslation } from "react-i18next";
 
 export default function ProjectDetail() {
+    const { t } = useTranslation();
 
     const [searchParams, setSearchParams] = useSearchParams();
     const tab = searchParams.get('tab');
@@ -54,9 +56,9 @@ export default function ProjectDetail() {
     if (!project) {
         return (
             <div className="p-6 text-center text-zinc-900 dark:text-zinc-200">
-                <p className="text-3xl md:text-5xl mt-40 mb-10">Project not found</p>
+                <p className="text-3xl md:text-5xl mt-40 mb-10">{t("Project not found")}</p>
                 <button onClick={() => navigate('/projects')} className="mt-4 px-4 py-2 rounded bg-zinc-200 text-zinc-900 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-white dark:hover:bg-zinc-600" >
-                    Back to Projects
+                    {t("Back to Projects")}
                 </button>
             </div>
         );
@@ -73,23 +75,23 @@ export default function ProjectDetail() {
                     <div className="flex items-center gap-3">
                         <h1 className="text-xl font-medium">{project.name}</h1>
                         <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[project.status] || "bg-zinc-200"}`} >
-                            {project.status ? project.status.replace("_", " ") : "Unknown"}
+                            {project.status ? t(project.status.replace("_", " ")) : t("Unknown")}
                         </span>
                     </div>
                 </div>
                 <button onClick={() => setShowCreateTask(true)} className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white" >
                     <PlusIcon className="size-4" />
-                    New Task
+                    {t("New Task")}
                 </button>
             </div>
 
             {/* Info Cards */}
             <div className="grid grid-cols-2 sm:flex flex-wrap gap-6">
                 {[
-                    { label: "Total Tasks", value: tasks.length, color: "text-zinc-900 dark:text-white" },
-                    { label: "Completed", value: tasks.filter((t) => t.status === "Done").length, color: "text-emerald-700 dark:text-emerald-400" },
-                    { label: "In Progress", value: tasks.filter((t) => t.status === "In Progress" || t.status === "To Do").length, color: "text-amber-700 dark:text-amber-400" },
-                    { label: "Team Members", value: project.members?.length || 0, color: "text-blue-700 dark:text-blue-400" },
+                    { label: t("Total Tasks"), value: tasks.length, color: "text-zinc-900 dark:text-white" },
+                    { label: t("Completed"), value: tasks.filter((t) => t.status === "Done").length, color: "text-emerald-700 dark:text-emerald-400" },
+                    { label: t("In Progress"), value: tasks.filter((t) => t.status === "In Progress" || t.status === "To Do").length, color: "text-amber-700 dark:text-amber-400" },
+                    { label: t("Team Members"), value: project.members?.length || 0, color: "text-blue-700 dark:text-blue-400" },
                 ].map((card, idx) => (
                     <div key={idx} className=" dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200 dark:border-zinc-800 flex justify-between sm:min-w-60 p-4 py-2.5 rounded">
                         <div>
@@ -105,10 +107,10 @@ export default function ProjectDetail() {
             <div>
                 <div className="inline-flex flex-wrap max-sm:grid grid-cols-3 gap-2 border border-zinc-200 dark:border-zinc-800 rounded overflow-hidden">
                     {[
-                        { key: "tasks", label: "Tasks", icon: FileStackIcon },
-                        { key: "calendar", label: "Calendar", icon: CalendarIcon },
-                        { key: "analytics", label: "Analytics", icon: BarChart3Icon },
-                        { key: "settings", label: "Settings", icon: SettingsIcon },
+                        { key: "tasks", label: t("Tasks"), icon: FileStackIcon },
+                        { key: "calendar", label: t("Calendar"), icon: CalendarIcon },
+                        { key: "analytics", label: t("Analytics"), icon: BarChart3Icon },
+                        { key: "settings", label: t("Settings"), icon: SettingsIcon },
                     ].map((tabItem) => (
                         <button key={tabItem.key} onClick={() => { setActiveTab(tabItem.key); setSearchParams({ id: id, tab: tabItem.key }) }} className={`flex items-center gap-2 px-4 py-2 text-sm transition-all ${activeTab === tabItem.key ? "bg-zinc-100 dark:bg-zinc-800/80" : "hover:bg-zinc-50 dark:hover:bg-zinc-700"}`} >
                             <tabItem.icon className="size-3.5" />

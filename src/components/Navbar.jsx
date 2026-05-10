@@ -6,8 +6,11 @@ import { assets } from '../assets/assets'
 import { useNavigate, Link } from 'react-router-dom'
 import { logout, selectIsAuthenticated, selectCurrentUser } from '../features/authSlice'
 import { LogOut } from 'lucide-react'
+import LanguageSelector from './LanguageSelector'
+import { useTranslation } from 'react-i18next'
 
 const Navbar = ({ setIsSidebarOpen }) => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { theme } = useSelector(state => state.theme);
@@ -34,7 +37,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                         <SearchIcon className="absolute left-2.5 top-1/2 md:flex hidden -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3.5" />
                         <input
                             type="text"
-                            placeholder="Search projects, tasks..."
+                            placeholder={t("Search projects, tasks...")}
                             className="pl-8 pr-4 py-2 md:flex hidden  bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-md text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"
                         />
                     </div>
@@ -51,6 +54,9 @@ const Navbar = ({ setIsSidebarOpen }) => {
                                 : (<SunIcon className="size-4 text-yellow-400" />)
                         }
                     </button>
+                    
+                    {/* Language Selector */}
+                    <LanguageSelector />
 
                     {/* User Profile / Login Link */}
                     <div className="flex items-center gap-3">
@@ -65,7 +71,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                                         className="text-[10px] text-red-500 hover:text-red-600 font-medium transition-colors flex items-center gap-1"
                                     >
                                         <LogOut size={10} />
-                                        Logout
+                                        {t("Logout")}
                                     </button>
                                 </div>
                                 {user?.image ? (
@@ -78,7 +84,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                             </>
                         ) : (
                             <Link to="/login" className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                                Sign In
+                                {t("Sign In Nav")}
                             </Link>
                         )}
                     </div>

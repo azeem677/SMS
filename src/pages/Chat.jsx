@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Send, Phone, Video, Info, MoreVertical, Plus } from 'lucide-react';
+import { Search, Send, Phone, Video, Info, MoreVertical, Plus, Bot } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRecentChats, fetchAllUsers } from '../features/chatSlice';
 import { selectCurrentUser } from '../features/authSlice';
 import { io } from 'socket.io-client';
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 const Chat = () => {
+    const { t } = useTranslation();
     const dispatch = useDispatch();
     const rawChatState = useSelector((state) => state.chat);
     const user = useSelector(selectCurrentUser);
@@ -162,7 +164,7 @@ const Chat = () => {
 
                     <div className="p-4 border-b border-gray-200 dark:border-zinc-800">
                         <div className="flex items-center justify-between mb-4">
-                            <h1 className="text-xl font-bold text-gray-800 dark:text-zinc-100 ">Messages</h1>
+                            <h1 className="text-xl font-bold text-gray-800 dark:text-zinc-100 ">{t("Messages")}</h1>
                             <button className="p-2 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-full transition-colors text-blue-500">
                                 <Plus size={20} />
                             </button>
@@ -173,17 +175,51 @@ const Chat = () => {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search people..."
+                                placeholder={t("Search people...")}
                                 className="w-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:text-zinc-100"
                             />
                         </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto no-scrollbar">
+                        {/* AI Assistant Section */}
+                        <div className="mb-4">
+                            <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">{t("AI Assistant")}</p>
+                            {allUsers.filter(u => u.email === 'ai.assistant@system.com').map((u) => {
+                                const uId = u?.id || u?._id;
+                                return (
+                                    <div
+                                        key={uId}
+                                        onClick={() => setSelectedChat({
+                                            _id: uId,
+                                            name: u?.name,
+                                            avatar: u?.image,
+                                            online: true
+                                        })}
+                                        className={`flex items-center gap-3 p-4 cursor-pointer transition-all hover:bg-white dark:hover:bg-zinc-800/50 border-l-4 ${(currentChat?.id || currentChat?._id) === uId
+                                            ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-600'
+                                            : 'border-transparent'
+                                            }`}
+                                    >
+                                        <div className="relative">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg">
+                                                <Bot size={24} />
+                                            </div>
+                                            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-zinc-900 rounded-full shadow-sm"></div>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-sm font-bold text-gray-800 dark:text-zinc-100 truncate">{u?.name}</h3>
+                                            <p className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">Smart Assistant</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
                         {/* Recent Chats Section */}
                         {recentChats.length > 0 && (
                             <div className="mb-4">
-                                <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">Recent Chats</p>
+                                <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">{t("Recent Chats")}</p>
                                 {recentChats.map((chat) => (
                                     <div
                                         key={chat.id || chat._id}
@@ -209,7 +245,7 @@ const Chat = () => {
                                             <div className="flex justify-between items-baseline mb-1">
                                                 <h3 className="text-sm font-semibold text-gray-800 dark:text-zinc-100 truncate">{chat.name}</h3>
                                             </div>
-                                            <p className="text-xs text-gray-500 dark:text-zinc-400 truncate leading-relaxed">View chat</p>
+                                            <p className="text-xs text-gray-500 dark:text-zinc-400 truncate leading-relaxed">{t("View chat")}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -218,12 +254,13 @@ const Chat = () => {
 
                         {/* All Registered Users Section */}
                         <div>
-                            <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">All Users</p>
+                            <p className="px-4 py-2 text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-wider">{t("All Users")}</p>
                             {filteredUsers.length > 0 ? (
                                 filteredUsers.map((u) => {
                                     const uId = u?.id || u?._id;
                                     const isMe = currentUserId && uId === currentUserId;
-                                    if (isMe) return null;
+                                    const isAI = u?.email === 'ai.assistant@system.com';
+                                    if (isMe || isAI) return null;
 
                                     return (
                                         <div
@@ -254,14 +291,14 @@ const Chat = () => {
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="text-sm font-semibold text-gray-800 dark:text-zinc-100 truncate">{u?.name}</h3>
                                                 <p className="text-[10px] text-gray-400 dark:text-zinc-500 truncate mb-1">{u?.email}</p>
-                                                <p className="text-xs text-gray-500 dark:text-zinc-400 truncate leading-relaxed">Click to start chat</p>
+                                                <p className="text-xs text-gray-500 dark:text-zinc-400 truncate leading-relaxed">{t("Click to start chat")}</p>
                                             </div>
                                         </div>
                                     );
                                 })
                             ) : (
                                 <div className="p-4 text-center text-gray-500 dark:text-zinc-400 text-sm">
-                                    {recentChats.length === 0 ? "No active chats or users found" : ""}
+                                    {recentChats.length === 0 ? t("No active chats or users found") : ""}
                                 </div>
                             )}
                         </div>
@@ -290,7 +327,7 @@ const Chat = () => {
                                     <div>
                                         <h2 className="text-sm font-bold text-gray-800 dark:text-zinc-100">{currentChat.name}</h2>
                                         <p className={`text-[11px] font-medium ${isUserOnline(currentChat.id || currentChat._id) ? 'text-green-500' : 'text-gray-400'}`}>
-                                            {isUserOnline(currentChat.id || currentChat._id) ? 'Online' : 'Offline'}
+                                            {isUserOnline(currentChat.id || currentChat._id) ? t('Online') : t('Offline')}
                                         </p>
                                     </div>
                                 </div>
@@ -336,7 +373,7 @@ const Chat = () => {
                                         })
                                     ) : (
                                         <div className="h-full flex items-center justify-center text-gray-500 dark:text-zinc-400 text-sm">
-                                            Start a conversation with {currentChat.name}
+                                            {t("Start a conversation with")} {currentChat.name}
                                         </div>
                                     )}
                                     {/* Auto scroll target */}
@@ -354,7 +391,7 @@ const Chat = () => {
                                         type="text"
                                         value={messageText}
                                         onChange={(e) => setMessageText(e.target.value)}
-                                        placeholder="Type your message..."
+                                        placeholder={t("Type your message...")}
                                         className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm py-2 px-1 dark:text-zinc-100"
                                     />
 
@@ -372,7 +409,7 @@ const Chat = () => {
                             <div className="w-20 h-20 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mb-4">
                                 <Info size={40} className="text-gray-300 dark:text-zinc-700" />
                             </div>
-                            <p>Select a chat to start messaging</p>
+                            <p>{t("Select a chat to start messaging")}</p>
                         </div>
                     )}
                 </div>

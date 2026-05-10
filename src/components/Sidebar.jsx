@@ -4,14 +4,16 @@ import MyTasksSidebar from './MyTasksSidebar'
 import ProjectSidebar from './ProjectsSidebar'
 import WorkspaceDropdown from './WorkspaceDropdown'
 import { FolderOpenIcon, LayoutDashboardIcon, SettingsIcon, UsersIcon, MessagesSquare } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+    const { t } = useTranslation()
 
     const menuItems = [
-        { name: 'Dashboard', href: '/', icon: LayoutDashboardIcon },
-        { name: 'Projects', href: '/projects', icon: FolderOpenIcon },
-        { name: 'Team', href: '/team', icon: UsersIcon },
-        { name: 'Chat', href: '/chat', icon: MessagesSquare },
+        { name: t('Dashboard'), href: '/', icon: LayoutDashboardIcon },
+        { name: t('Projects'), href: '/projects', icon: FolderOpenIcon },
+        { name: t('Team'), href: '/team', icon: UsersIcon },
+        { name: t('Chat'), href: '/chat', icon: MessagesSquare },
     ]
 
     const sidebarRef = useRef(null);

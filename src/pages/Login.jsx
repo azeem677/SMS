@@ -4,6 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
 import { setCredentials } from "../features/authSlice";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "../components/LanguageSelector";
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -12,6 +14,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { t } = useTranslation();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -49,20 +52,24 @@ const Login = () => {
             <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl animate-pulse"></div>
             <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl animate-pulse delay-700"></div>
 
+            <div className="absolute top-4 right-4 z-50">
+                <LanguageSelector />
+            </div>
+
             <div className="relative w-full max-w-md">
                 {/* Login Card */}
                 <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
                     <div className="p-8">
                         <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Welcome Back</h1>
-                            <p className="text-slate-500 dark:text-slate-400">Please enter your details to sign in</p>
+                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{t("Welcome Back")}</h1>
+                            <p className="text-slate-500 dark:text-slate-400">{t("Please enter your details to sign in")}</p>
                         </div>
 
                         <form onSubmit={handleLogin} className="space-y-6">
                             {/* Email Field */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                                    Email Address
+                                    {t("Email Address")}
                                 </label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -82,7 +89,7 @@ const Login = () => {
                             {/* Password Field */}
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5 ml-1">
-                                    Password
+                                    {t("Password")}
                                 </label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
@@ -113,11 +120,11 @@ const Login = () => {
                                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 transition-all"
                                     />
                                     <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">
-                                        Remember me
+                                        {t("Remember me")}
                                     </span>
                                 </label>
                                 <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                                    Forgot password?
+                                    {t("Forgot password?")}
                                 </a>
                             </div>
 
@@ -130,7 +137,7 @@ const Login = () => {
                                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                 ) : (
                                     <>
-                                        <span>Sign In</span>
+                                        <span>{t("Sign In")}</span>
                                         <LogIn size={18} />
                                     </>
                                 )}
@@ -142,27 +149,27 @@ const Login = () => {
                                 <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-500">Or continue with</span>
+                                <span className="px-2 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-500">{t("Or continue with")}</span>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <button className="flex items-center justify-center space-x-2 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                 <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Google</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("Google")}</span>
                             </button>
                             <button className="flex items-center justify-center space-x-2 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                 <Github size={18} className="text-slate-900 dark:text-white" />
-                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">GitHub</span>
+                                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("GitHub")}</span>
                             </button>
                         </div>
                     </div>
 
                     <div className="px-8 py-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 text-center">
                         <p className="text-sm text-slate-600 dark:text-slate-400">
-                            Don't have an account?{" "}
+                            {t("Don't have an account?")}{" "}
                             <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
-                                Create account
+                                {t("Create account")}
                             </Link>
                         </p>
                     </div>
