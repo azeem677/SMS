@@ -20,30 +20,17 @@ const Login = () => {
         e.preventDefault();
         setIsLoading(true);
 
-        try {
-            const response = await fetch("http://localhost:5000/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                dispatch(setCredentials({ user: data.user, token: data.token }));
-                toast.success("Login successful!");
-                navigate("/");
-            } else {
-                toast.error(data.message || "Invalid credentials");
-            }
-        } catch (error) {
-            console.error("Login error:", error);
-            toast.error("Network error. Is the backend server running?");
-        } finally {
+        // Mock login bypass
+        setTimeout(() => {
+            const mockData = {
+                user: { id: "guest_user", name: "Guest User", email: email || "guest@example.com", role: "Admin" },
+                token: "mock_token"
+            };
+            dispatch(setCredentials({ user: mockData.user, token: mockData.token }));
+            toast.success("Login successful (Bypassed)!");
+            navigate("/");
             setIsLoading(false);
-        }
+        }, 800);
     };
 
     return (

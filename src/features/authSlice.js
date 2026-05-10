@@ -11,13 +11,20 @@ const safeParse = (key, fallback = null) => {
     }
 };
 
-const user = safeParse('user');
-const token = localStorage.getItem('token');
+const mockUser = {
+    id: "guest_user",
+    name: "Guest User",
+    email: "guest@example.com",
+    role: "Admin"
+};
+
+const user = safeParse('user') || mockUser;
+const token = localStorage.getItem('token') || "mock_token";
 
 const initialState = {
     user: user,
-    token: token && token !== "undefined" ? token : null,
-    isAuthenticated: !!token && token !== "undefined",
+    token: token && token !== "undefined" ? token : "mock_token",
+    isAuthenticated: true, // Always true for now
 };
 
 const authSlice = createSlice({

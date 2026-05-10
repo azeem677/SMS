@@ -18,29 +18,12 @@ const Register = () => {
         e.preventDefault();
         setIsLoading(true);
 
-        try {
-            const response = await fetch("http://localhost:5000/api/auth/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ name, email, password }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                toast.success(data.message || "Account created successfully!");
-                navigate("/login");
-            } else {
-                toast.error(data.message || "Registration failed. Please try again.");
-            }
-        } catch (error) {
-            console.error("Registration error:", error);
-            toast.error("Network error. Is the backend server running?");
-        } finally {
+        // Mock registration bypass
+        setTimeout(() => {
+            toast.success("Account created successfully (Bypassed)!");
+            navigate("/login");
             setIsLoading(false);
-        }
+        }, 800);
     };
 
     return (
