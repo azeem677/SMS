@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import API from "../services/api";
 import { dummyWorkspaces } from "../assets/assets";
+
 
 const safeParse = (key, fallback = null) => {
     const item = localStorage.getItem(key);
@@ -36,170 +38,91 @@ const persistState = (state) => {
 
 export const fetchWorkspaces = createAsyncThunk(
     "workspace/fetchWorkspaces",
-    async (_, { getState, rejectWithValue }) => {
+    async (_, { rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
-            console.log("Fetching workspaces...");
-            const response = await fetch("http://localhost:5000/api/workspaces", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Fetch workspaces failed:", response.status, errorData);
-                return rejectWithValue(errorData.message || "Failed to fetch workspaces");
-            }
-
-            const data = await response.json();
-            console.log("Workspaces fetched successfully:", data);
-            return data;
+            const response = await API.get("/workspaces");
+            return response.data;
         } catch (error) {
-            console.error("Network error during fetchWorkspaces:", error);
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
+
+
+export const createWorkspaceFromServer = createAsyncThunk(
+    "workspace/createWorkspaceFromServer",
+    async (workspaceData, { rejectWithValue }) => {
+        try {
+            const response = await API.post("/workspaces", workspaceData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || error.message);
+        }
+    }
+);
+
 
 export const fetchProjects = createAsyncThunk(
     "workspace/fetchProjects",
-    async (_, { getState, rejectWithValue }) => {
+    async (_, { rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
-            console.log("Fetching projects...");
-            const response = await fetch("http://localhost:5000/api/projects", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Fetch projects failed:", response.status, errorData);
-                return rejectWithValue(errorData.message || "Failed to fetch projects");
-            }
-
-            const data = await response.json();
-            console.log("Projects fetched successfully:", data);
-            return data;
+            const response = await API.get("/projects");
+            return response.data;
         } catch (error) {
-            console.error("Network error during fetchProjects:", error);
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
+
 
 export const createProject = createAsyncThunk(
     "workspace/createProject",
-    async (projectData, { getState, rejectWithValue }) => {
+    async (projectData, { rejectWithValue }) => {
         try {
-            console.log("Creating project with payload:", projectData);
-            const token = getState().auth.token;
-            const response = await fetch("http://localhost:5000/api/projects", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(projectData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Project creation failed. Status:", response.status, "Error:", errorData);
-                return rejectWithValue(errorData.message || "Failed to create project");
-            }
-
-            const data = await response.json();
-            console.log("Project created successfully:", data);
-            return data;
+            const response = await API.post("/projects", projectData);
+            return response.data;
         } catch (error) {
-            console.error("Network or unexpected error during project creation:", error);
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
+
 
 export const fetchTasks = createAsyncThunk(
     "workspace/fetchTasks",
-    async (projectId, { getState, rejectWithValue }) => {
+    async (projectId, { rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
-            const url = projectId
-                ? `http://localhost:5000/api/projects/${projectId}/tasks`
-                : "http://localhost:5000/api/tasks";
-
-            const response = await fetch(url, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                return rejectWithValue(errorData.error || errorData.message || "Failed to fetch tasks");
-            }
-
-            const data = await response.json();
-            return data;
+            const url = projectId ? `/projects/${projectId}/tasks` : "/tasks";
+            const response = await API.get(url);
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.error || error.message);
         }
     }
 );
+
 
 export const createTaskFromServer = createAsyncThunk(
     "workspace/createTaskFromServer",
-    async (taskData, { getState, rejectWithValue }) => {
+    async (taskData, { rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
             const projectId = taskData.projectId || taskData.project;
-
-            // Prefer project-specific URL if projectId is available
-            const url = projectId
-                ? `http://localhost:5000/api/projects/${projectId}/tasks`
-                : "http://localhost:5000/api/tasks";
-
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(taskData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                return rejectWithValue(errorData.error || errorData.message || "Failed to create task");
-            }
-
-            const data = await response.json();
-            return data;
+            const url = projectId ? `/projects/${projectId}/tasks` : "/tasks";
+            const response = await API.post(url, taskData);
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.error || error.message);
         }
     }
 );
 
+
 export const fetchTaskById = createAsyncThunk(
     "workspace/fetchTaskById",
-    async ({ projectId, taskId }, { getState, rejectWithValue }) => {
+    async ({ projectId, taskId }, { rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
-            const response = await fetch(`http://localhost:5000/api/tasks/${taskId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                return rejectWithValue(errorData.error || errorData.message || "Failed to fetch task");
-            }
-
-            const data = await response.json();
+            const response = await API.get(`/tasks/${taskId}`);
+            const data = response.data;
             const task = data.data;
             const resolvedProjectId = (projectId && projectId !== "undefined")
                 ? projectId
@@ -207,10 +130,11 @@ export const fetchTaskById = createAsyncThunk(
 
             return { task, projectId: resolvedProjectId };
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.error || error.message);
         }
     }
 );
+
 
 
 
@@ -388,6 +312,20 @@ const workspaceSlice = createSlice({
                         state.currentWorkspace = state.workspaces[0];
                         localStorage.setItem("currentWorkspaceId", state.currentWorkspace.id);
                     }
+                }
+                persistState(state);
+            })
+            .addCase(createWorkspaceFromServer.fulfilled, (state, action) => {
+                const workspace = action.payload?.data || action.payload;
+                if (workspace) {
+                    const normalizedWS = {
+                        ...workspace,
+                        id: workspace.id || workspace._id,
+                        projects: []
+                    };
+                    state.workspaces.push(normalizedWS);
+                    state.currentWorkspace = normalizedWS;
+                    localStorage.setItem("currentWorkspaceId", normalizedWS.id);
                 }
                 persistState(state);
             })

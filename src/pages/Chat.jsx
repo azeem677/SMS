@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchRecentChats, fetchAllUsers } from '../features/chatSlice';
 import { selectCurrentUser } from '../features/authSlice';
 import { io } from 'socket.io-client';
-import axios from 'axios';
+import API from '../services/api';
+
 import { useTranslation } from "react-i18next";
 
 const Chat = () => {
@@ -79,12 +80,11 @@ const Chat = () => {
             const chatUserId = selectedChat.id || selectedChat._id;
 
             try {
-                const res = await axios.get(`http://localhost:5000/api/chat/${chatUserId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await API.get(`/chat/${chatUserId}`);
                 // Backend returns { success: true, data: [...] }
                 setCurrentMessages(res.data.data);
             } catch (err) {
+
                 console.error("Failed to load messages", err);
             }
         };
@@ -245,7 +245,10 @@ const Chat = () => {
                                             <div className="flex justify-between items-baseline mb-1">
                                                 <h3 className="text-sm font-semibold text-gray-800 dark:text-zinc-100 truncate">{chat.name}</h3>
                                             </div>
-                                            <p className="text-xs text-gray-500 dark:text-zinc-400 truncate leading-relaxed">{t("View chat")}</p>
+                                            <p className="text-xs text-gray-500 dark:text-zinc-400 truncate leading-relaxed">
+                                                {chat.lastMessage?.content || t("Start conversation")}
+                                            </p>
+
                                         </div>
                                     </div>
                                 ))}

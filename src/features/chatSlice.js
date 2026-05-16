@@ -1,79 +1,45 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import API from '../services/api';
+
 
 export const fetchRecentChats = createAsyncThunk(
     'chat/fetchRecentChats',
     async (_, { getState, rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
-            const response = await fetch('http://localhost:5000/api/chat/recent', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                return rejectWithValue(errorData.message || 'Failed to fetch recent chats');
-            }
-
-            const data = await response.json();
-            return data;
+            const response = await API.get('/chat/recent');
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
+
 
 export const sendMessage = createAsyncThunk(
     'chat/sendMessage',
-    async ({ chatId, text }, { getState, rejectWithValue }) => {
+    async ({ chatId, text }, { rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
-            const response = await fetch('http://localhost:5000/api/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ chatId, text }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                return rejectWithValue(errorData.message || 'Failed to send message');
-            }
-
-            const data = await response.json();
-            return data;
+            const response = await API.post('/chat/send', { chatId, text });
+            return response.data;
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
+
 
 export const fetchAllUsers = createAsyncThunk(
     'chat/fetchAllUsers',
-    async (_, { getState, rejectWithValue }) => {
+    async (_, { rejectWithValue }) => {
         try {
-            const token = getState().auth.token;
-            const response = await fetch('http://localhost:5000/api/auth/users', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                return rejectWithValue(errorData.message || 'Failed to fetch users');
-            }
-
-            const data = await response.json();
-            return data.users || data;
+            const response = await API.get('/auth/users');
+            return response.data.users || response.data;
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.message || error.message);
         }
     }
 );
+
 
 const initialState = {
     recentChats: [],
@@ -98,8 +64,14 @@ const chatSlice = createSlice({
             })
             .addCase(fetchRecentChats.fulfilled, (state, action) => {
                 state.loading = false;
-                state.recentChats = action.payload;
+                const data = action.payload.data || action.payload;
+                state.recentChats = Array.isArray(data) ? data.map(item => ({
+                    ...(item.user || {}),
+                    id: item.user?._id || item.user?.id,
+                    lastMessage: item.lastMessage
+                })) : [];
             })
+
             .addCase(fetchRecentChats.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;

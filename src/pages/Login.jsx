@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import { setCredentials } from "../features/authSlice";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "../components/LanguageSelector";
+import API from "../services/api";
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -16,22 +17,27 @@ const Login = () => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
 
+
     const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Mock login bypass
-        setTimeout(() => {
-            const mockData = {
-                user: { id: "guest_user", name: "Guest User", email: email || "guest@example.com", role: "Admin" },
-                token: "mock_token"
-            };
-            dispatch(setCredentials({ user: mockData.user, token: mockData.token }));
-            toast.success("Login successful (Bypassed)!");
-            navigate("/");
+        try {
+            const { data } = await API.post("/auth/login", { email, password });
+            
+            if (data.success) {
+                dispatch(setCredentials({ user: data.user, token: data.token }));
+                toast.success(t("Login successful!"));
+                navigate("/");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            toast.error(error.response?.data?.error || t("Invalid credentials"));
+        } finally {
             setIsLoading(false);
-        }, 800);
+        }
     };
+
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] flex items-center justify-center p-4 transition-colors duration-300">
